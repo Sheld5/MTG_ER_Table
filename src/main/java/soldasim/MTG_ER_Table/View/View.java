@@ -45,5 +45,13 @@ public class View extends Application implements Runnable {
         ImageView imageView = new ImageView(SwingFXUtils.toFXImage(WebcamController.getImage(), null));
         Pane contentPane = new Pane(imageView);
         testScene = new Scene(contentPane);
+
+        testScene.setOnKeyPressed(event -> {
+            switch (event.getCode()) {
+                case SPACE:
+                    imageView.setImage(SwingFXUtils.toFXImage(WebcamController.getImage(), null));
+            }
+        });
     }
+
 }
