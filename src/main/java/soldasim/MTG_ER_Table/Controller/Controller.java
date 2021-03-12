@@ -2,8 +2,6 @@ package soldasim.MTG_ER_Table.Controller;
 
 import soldasim.MTG_ER_Table.View.View;
 
-import java.awt.*;
-
 /**
  * Controller according to the MVC application model.
  * Handles application flow and logic.
@@ -20,19 +18,6 @@ public class Controller {
     public Controller(View view) {
         this.view = view;
         view.setController(this);
-
-        try {
-            ScreenCapture.init(new Dimension(3840, 2160)); //TODO
-        } catch (AWTException e) {
-            e.printStackTrace();
-        }
-
-        initViewThread();
-    }
-
-    private void initViewThread() {
-        Thread viewThread = new Thread(view);
-        viewThread.start();
     }
 
 }

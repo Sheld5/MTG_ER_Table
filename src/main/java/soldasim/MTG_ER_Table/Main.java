@@ -8,6 +8,9 @@ public class Main {
     public static void main(String[] args) {
 
         View view = new View();
+        Thread viewThread = new Thread(view);
+        viewThread.start();
+
         Controller controller = new Controller(view);
 
     }
