@@ -7,11 +7,12 @@ public class Main {
 
     public static void main(String[] args) {
 
+        Controller controller = new Controller();
+        View.controller = controller;
         View view = new View();
         Thread viewThread = new Thread(view);
         viewThread.start();
-
-        Controller controller = new Controller(view);
+        controller.start();
 
     }
 

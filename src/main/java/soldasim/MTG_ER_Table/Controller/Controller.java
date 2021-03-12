@@ -10,14 +10,71 @@ public class Controller {
 
     private View view;
 
+    private final Object deckListLock = new Object();
+    private String deckList;
+
     /**
-     * Save a reference to the application view class. Initialize.
-     * @param view the application view class
+     * Initialize.
+     */
+    public Controller() {
+        deckList = "";
+    }
+
+    /**
+     * Start the program.
+     */
+    public void start() {
+        waitForView();
+        startWorkLoop();
+    }
+
+    /**
+     * Wait until view gives reference for itself and notifies.
      * @see View
      */
-    public Controller(View view) {
-        this.view = view;
-        view.setController(this);
+    private void waitForView() {
+        synchronized (this) {
+            while (view == null) {
+                try {
+                    this.wait();
+                } catch (InterruptedException ignored) {}
+            }
+        }
+    }
+
+    /**
+     * Give the controller a reference to the view and notify it.
+     * @param view the application view instance
+     * @see View
+     */
+    public void setView(View view) {
+        synchronized (this) {
+            this.view = view;
+            this.notify();
+        }
+    }
+
+    private void startWorkLoop() {
+        while (true) {
+
+            synchronized (deckListLock) {
+                while (deckList.isEmpty()) {
+                    try {
+                        deckListLock.wait();
+                    } catch (InterruptedException ignored) {}
+                }
+                view.giveCardList(TextParser.parseDeckList(deckList));
+                deckList = "";
+            }
+
+        }
+    }
+
+    public void requestParseDeckList(String deckList) {
+        synchronized (deckListLock) {
+            this.deckList = deckList;
+            deckListLock.notify();
+        }
     }
 
 }

@@ -1,6 +1,7 @@
 package soldasim.MTG_ER_Table.View;
 
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -12,7 +13,6 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import soldasim.MTG_ER_Table.Controller.Controller;
-import soldasim.MTG_ER_Table.Controller.TextParser;
 
 import java.util.ArrayList;
 
@@ -26,22 +26,14 @@ public class View extends Application implements Runnable {
     private static final Insets PADDING = new Insets(12, 12, 12, 12);
     private static final int SPACING = 12;
 
-    private Controller controller;
+    public static Controller controller;
 
     private Stage mainStage;
     private Scene testScene;
+    private Label label;
 
     /**
-     * Save a reference to the application controller.
-     * @param controller the controller
-     * @see Controller
-     */
-    public void setController(Controller controller) {
-        this.controller = controller;
-    }
-
-    /**
-     * Call launch() to launch the view.
+     * Call Application.launch() to launch the view.
      */
     @Override
     public void run() {
@@ -49,15 +41,25 @@ public class View extends Application implements Runnable {
     }
 
     /**
-     * Is called from the launch() call. Initialize the view.
+     * Is called from the launch() call.
+     * Initialize the view and give the controller a reference to itself.
      * @param stage the main stage
+     * @see Controller
      */
     @Override
     public void start(Stage stage) {
         this.mainStage = stage;
+        initialize();
+        controller.setView(this);
+        mainStage.show();
+    }
+
+    /**
+     * Initialize the view.
+     */
+    private void initialize() {
         initTestScene();
         initMainStage(testScene);
-        mainStage.show();
     }
 
     private void initMainStage(Scene scene) {
@@ -66,9 +68,8 @@ public class View extends Application implements Runnable {
         mainStage.setScene(scene);
     }
 
-    // TODO
     private void initTestScene() {
-                    Label label = new Label();
+                    label = new Label();
 
                 Pane imagePane = new Pane(label);
                 imagePane.setPrefSize(256, 256);
@@ -76,7 +77,7 @@ public class View extends Application implements Runnable {
                     TextArea deckList = new TextArea();
 
                     Button loadButton = new Button("load");
-                    loadButton.setOnAction(event -> loadButtonPressed(deckList, label));
+                    loadButton.setOnAction(event -> loadButtonPressed(deckList));
 
                 VBox deckArea = new VBox(deckList, loadButton);
                 deckArea.setAlignment(Pos.CENTER);
@@ -91,10 +92,15 @@ public class View extends Application implements Runnable {
         testScene = new Scene(content);
     }
 
-    private void loadButtonPressed(TextArea deckList, Label label) {
-        ArrayList<String> cardNames = TextParser.parseDeckList(deckList.getText());
-        if (cardNames.isEmpty()) return;
-        label.setText(cardNames.get(0));
+    private void loadButtonPressed(TextArea deckList) {
+        controller.requestParseDeckList(deckList.getText());
+    }
+
+    public void giveCardList(ArrayList<String> cardList) {
+        Platform.runLater(() -> {
+            if (cardList.isEmpty()) return;
+            label.setText(cardList.get(0));
+        });
     }
 
 }
