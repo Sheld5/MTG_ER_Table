@@ -2,6 +2,8 @@ package soldasim.MTG_ER_Table.Controller;
 
 import soldasim.MTG_ER_Table.View.View;
 
+import java.awt.*;
+
 /**
  * Controller according to the MVC application model.
  * Handles application flow and logic.
@@ -19,7 +21,12 @@ public class Controller {
         this.view = view;
         view.setController(this);
 
-        WebcamController.init();
+        try {
+            ScreenCapture.init();
+        } catch (AWTException e) {
+            e.printStackTrace();
+        }
+
         initViewThread();
     }
 
