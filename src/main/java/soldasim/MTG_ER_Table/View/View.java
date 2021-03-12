@@ -5,6 +5,7 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
@@ -12,6 +13,8 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import soldasim.MTG_ER_Table.Controller.Controller;
+
+import java.util.ArrayList;
 
 /**
  * View according to the MVC application model.
@@ -27,7 +30,6 @@ public class View extends Application implements Runnable {
 
     private Stage mainStage;
     private Scene testScene;
-    private ImageView imageView;
 
     /**
      * Save a reference to the application controller.
@@ -66,15 +68,15 @@ public class View extends Application implements Runnable {
 
     // TODO
     private void initTestScene() {
-                    imageView = new ImageView();
+                    Label label = new Label();
 
-                Pane imagePane = new Pane(imageView);
+                Pane imagePane = new Pane(label);
                 imagePane.setPrefSize(256, 256);
 
                     TextArea deckList = new TextArea();
 
                     Button loadButton = new Button("load");
-                    loadButton.setOnAction(event -> loadButtonPressed());
+                    loadButton.setOnAction(event -> loadButtonPressed(deckList, label));
 
                 VBox deckArea = new VBox(deckList, loadButton);
                 deckArea.setAlignment(Pos.CENTER);
@@ -89,8 +91,10 @@ public class View extends Application implements Runnable {
         testScene = new Scene(content);
     }
 
-    private void loadButtonPressed() {
-        
+    private void loadButtonPressed(TextArea deckList, Label label) {
+        ArrayList<String> cardNames = TextParser.parseDeckList(deckList.getText());
+        if (cardNames.isEmpty()) return;
+        label.setText(cardNames.get(0));
     }
 
 }
