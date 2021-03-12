@@ -16,10 +16,9 @@ public class TextParser {
      */
     public static ArrayList<String> parseDeckList(String deckList) {
         ArrayList<String> cardNames = new ArrayList<>();
-        String[] lines = deckList.split("\\r?\\n");
-
         Pattern namePattern = Pattern.compile("^[a-zA-Z',!]+$");
 
+        String[] lines = deckList.split("\\r?\\n");
         for (String line : lines) {
             StringBuilder cardName = new StringBuilder();
             String[] words = line.split(" ");
