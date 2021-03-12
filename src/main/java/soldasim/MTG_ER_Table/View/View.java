@@ -11,6 +11,7 @@ import soldasim.MTG_ER_Table.Controller.Controller;
 import soldasim.MTG_ER_Table.Controller.ScreenCapture;
 
 import static soldasim.MTG_ER_Table.View.ViewUtils.getImage;
+import static soldasim.MTG_ER_Table.View.ViewUtils.rescaleImage;
 
 /**
  * View according to the MVC application model.
@@ -61,7 +62,7 @@ public class View extends Application implements Runnable {
     }
 
     private void initTestScene() {
-        ImageView imageView = new ImageView(getImage(ScreenCapture.getScreen()));
+        ImageView imageView = new ImageView(getImage(rescaleImage(ScreenCapture.getScreen(), 853, 480)));
         //TextArea textArea = new TextArea();
         HBox contentPane = new HBox(imageView);
         testScene = new Scene(contentPane);
@@ -69,7 +70,7 @@ public class View extends Application implements Runnable {
         testScene.setOnKeyPressed(event -> {
             switch (event.getCode()) {
                 case SPACE:
-                    imageView.setImage(getImage(ScreenCapture.getScreen()));
+                    imageView.setImage(getImage(rescaleImage(ScreenCapture.getScreen(), 853, 480)));
             }
         });
     }
