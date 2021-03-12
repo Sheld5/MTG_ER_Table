@@ -1,14 +1,20 @@
 package soldasim.MTG_ER_Table.View;
 
 import javafx.application.Application;
-import javafx.embed.swing.SwingFXUtils;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.Scene;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
-import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
+import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import soldasim.MTG_ER_Table.Controller.Controller;
-import soldasim.MTG_ER_Table.Controller.WebcamController;
+import soldasim.MTG_ER_Table.Controller.TextParser;
+
+import java.util.ArrayList;
 
 /**
  * View according to the MVC application model.
@@ -17,6 +23,8 @@ import soldasim.MTG_ER_Table.Controller.WebcamController;
 public class View extends Application implements Runnable {
 
     private static final String WINDOW_TITLE = "MTG ER Table";
+    private static final Insets PADDING = new Insets(12, 12, 12, 12);
+    private static final int SPACING = 12;
 
     private Controller controller;
 
@@ -58,18 +66,35 @@ public class View extends Application implements Runnable {
         mainStage.setScene(scene);
     }
 
+    // TODO
     private void initTestScene() {
-        ImageView imageView = new ImageView(SwingFXUtils.toFXImage(WebcamController.getImage(), null));
-        //TextArea textArea = new TextArea();
-        HBox contentPane = new HBox(imageView);
-        testScene = new Scene(contentPane);
+                    Label label = new Label();
 
-        testScene.setOnKeyPressed(event -> {
-            switch (event.getCode()) {
-                case SPACE:
-                    imageView.setImage(SwingFXUtils.toFXImage(WebcamController.getImage(), null));
-            }
-        });
+                Pane imagePane = new Pane(label);
+                imagePane.setPrefSize(256, 256);
+
+                    TextArea deckList = new TextArea();
+
+                    Button loadButton = new Button("load");
+                    loadButton.setOnAction(event -> loadButtonPressed(deckList, label));
+
+                VBox deckArea = new VBox(deckList, loadButton);
+                deckArea.setAlignment(Pos.CENTER);
+                deckArea.setSpacing(SPACING);
+                deckArea.setPrefSize(128, 256);
+
+            HBox content = new HBox(imagePane, deckArea);
+            content.setAlignment(Pos.CENTER);
+            content.setSpacing(SPACING);
+            content.setPadding(PADDING);
+
+        testScene = new Scene(content);
+    }
+
+    private void loadButtonPressed(TextArea deckList, Label label) {
+        ArrayList<String> cardNames = TextParser.parseDeckList(deckList.getText());
+        if (cardNames.isEmpty()) return;
+        label.setText(cardNames.get(0));
     }
 
 }

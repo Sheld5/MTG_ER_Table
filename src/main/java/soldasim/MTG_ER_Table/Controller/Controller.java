@@ -18,14 +18,6 @@ public class Controller {
     public Controller(View view) {
         this.view = view;
         view.setController(this);
-
-        WebcamController.init();
-        initViewThread();
-    }
-
-    private void initViewThread() {
-        Thread viewThread = new Thread(view);
-        viewThread.start();
     }
 
 }
