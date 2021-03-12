@@ -1,4 +1,4 @@
-package soldasim.MTG_ER_Table.View;
+package soldasim.MTG_ER_Table.Controller;
 
 import java.util.ArrayList;
 import java.util.regex.Pattern;
