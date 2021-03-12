@@ -10,7 +10,6 @@ public class ScreenCapture {
 
     private static Robot robot;
     private static Rectangle screen;
-    private static Dimension screenSize;
 
     /**
      * Initialize. Is to be called before calling other functions.
@@ -18,7 +17,17 @@ public class ScreenCapture {
      */
     public static void init() throws AWTException {
         robot = new Robot();
-        screenSize = new Dimension(3840, 2160); //TODO
+        screen = new Rectangle(Toolkit.getDefaultToolkit().getScreenSize());
+    }
+
+    /**
+     * Initialize. Is to be called before calling other functions.
+     * Set the screen size to the given size instead of trying to get the screen size from the system.
+     * @param screenSize the size of the screen in pixels
+     * @throws AWTException
+     */
+    public static void init(Dimension screenSize) throws AWTException {
+        robot = new Robot();
         screen = new Rectangle(screenSize);
     }
 

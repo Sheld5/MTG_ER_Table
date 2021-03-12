@@ -22,7 +22,7 @@ public class Controller {
         view.setController(this);
 
         try {
-            ScreenCapture.init();
+            ScreenCapture.init(new Dimension(3840, 2160)); //TODO
         } catch (AWTException e) {
             e.printStackTrace();
         }
