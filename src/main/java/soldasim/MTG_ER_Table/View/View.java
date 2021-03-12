@@ -3,12 +3,17 @@ package soldasim.MTG_ER_Table.View;
 import javafx.application.Application;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.scene.Scene;
+import javafx.scene.control.TextArea;
 import javafx.scene.image.ImageView;
-import javafx.scene.layout.Pane;
+import javafx.scene.layout.HBox;
 import javafx.stage.Stage;
 import soldasim.MTG_ER_Table.Controller.Controller;
 import soldasim.MTG_ER_Table.Controller.WebcamController;
 
+/**
+ * View according to the MVC application model.
+ * Handles user interaction and displaying the application.
+ */
 public class View extends Application implements Runnable {
 
     private static final String WINDOW_TITLE = "MTG ER Table";
@@ -18,15 +23,27 @@ public class View extends Application implements Runnable {
     private Stage mainStage;
     private Scene testScene;
 
+    /**
+     * Save a reference to the application controller.
+     * @param controller the controller
+     * @see Controller
+     */
     public void setController(Controller controller) {
         this.controller = controller;
     }
 
+    /**
+     * Call launch() to launch the view.
+     */
     @Override
     public void run() {
         launch();
     }
 
+    /**
+     * Is called from the launch() call. Initialize the view.
+     * @param stage the main stage
+     */
     @Override
     public void start(Stage stage) {
         this.mainStage = stage;
@@ -43,7 +60,8 @@ public class View extends Application implements Runnable {
 
     private void initTestScene() {
         ImageView imageView = new ImageView(SwingFXUtils.toFXImage(WebcamController.getImage(), null));
-        Pane contentPane = new Pane(imageView);
+        //TextArea textArea = new TextArea();
+        HBox contentPane = new HBox(imageView);
         testScene = new Scene(contentPane);
 
         testScene.setOnKeyPressed(event -> {
