@@ -14,9 +14,9 @@ public class Controller {
 
     private View view;
 
-    final Lock workLock = new ReentrantLock();
-    final Condition workCond = workLock.newCondition();
-    boolean workReady = false;
+    private final Lock workLock = new ReentrantLock();
+    private final Condition workCond = workLock.newCondition();
+    private boolean workReady;
 
     private WorkData work;
     private WorkData tmpWork;
@@ -25,6 +25,11 @@ public class Controller {
      * Initialize.
      */
     public Controller() {
+        initWorkStructure();
+    }
+
+    private void initWorkStructure() {
+        workReady = false;
         work = new WorkData();
     }
 
@@ -107,6 +112,7 @@ public class Controller {
 
     /**
      * Called by the view on termination.
+     * @see View
      */
     public void notifyViewTerminated() {
         workLock.lock();
@@ -124,6 +130,7 @@ public class Controller {
      * Set workReady to true and signal controller that there is work ready.
      * @param deckList String containing individual cards on separate lines
      *                 Can contain additional white-spaces and card quantities.
+     * @see View
      */
     public void giveWorkDeckList(String deckList) {
         workLock.lock();

@@ -54,6 +54,10 @@ public class View extends Application implements Runnable {
         mainStage.show();
     }
 
+    /**
+     * Notify the controller that the view is terminating.
+     * @see Controller
+     */
     @Override
     public void stop() {
         controller.notifyViewTerminated();
@@ -70,6 +74,7 @@ public class View extends Application implements Runnable {
     /**
      * Called by the controller to give the view a list of card names to be displayed.
      * @param cardList a list of individual card names
+     * @see Controller
      */
     public void giveCardList(ArrayList<String> cardList) {
         Platform.runLater(() -> {
