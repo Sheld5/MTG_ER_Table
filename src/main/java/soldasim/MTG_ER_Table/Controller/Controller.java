@@ -107,6 +107,7 @@ public class Controller {
 
     /**
      * Called by the view to give controller deck list from the user to be processed.
+     * Set workReady to true and signal controller that there is work ready.
      * @param deckList String containing individual cards on separate lines
      *                 Can contain additional white-spaces and card quantities.
      */
