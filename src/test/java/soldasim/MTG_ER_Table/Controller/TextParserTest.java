@@ -68,6 +68,42 @@ public class TextParserTest {
     }
 
     @Test
+    public void cardWithSimpleQuantity() {
+        String input = "2 mountain";
+
+        ArrayList<String> expected = new ArrayList<>();
+        expected.add("mountain");
+
+        ArrayList<String> actual = TextParser.parseDeckList(input);
+
+        Assertions.assertEquals(expected, actual);
+    }
+
+    @Test
+    public void cardWithMultipleDigitQuantity() {
+        String input = "256 mountain";
+
+        ArrayList<String> expected = new ArrayList<>();
+        expected.add("mountain");
+
+        ArrayList<String> actual = TextParser.parseDeckList(input);
+
+        Assertions.assertEquals(expected, actual);
+    }
+
+    @Test
+    public void cardWithQuantityWithX() {
+        String input = "8x mountain";
+
+        ArrayList<String> expected = new ArrayList<>();
+        expected.add("mountain");
+
+        ArrayList<String> actual = TextParser.parseDeckList(input);
+
+        Assertions.assertEquals(expected, actual);
+    }
+
+    @Test
     public void extraWhiteSpace() {
         String input = " \taAa    b'b'b\n";
 
@@ -95,12 +131,28 @@ public class TextParserTest {
     @Test
     public void multipleCardNames() {
         String input = "Asdf!\n" +
-                "  gigGlt pFOf\n\n" +
-                "srou'sv\taasda\n";
+                "gigGlt pFOf\n\n" +
+                "srou'sv aasda\n";
 
         ArrayList<String> expected = new ArrayList<>();
         expected.add("Asdf!");
         expected.add("gigGlt pFOf");
+        expected.add("srou'sv aasda");
+
+        ArrayList<String> actual = TextParser.parseDeckList(input);
+
+        Assertions.assertEquals(expected, actual);
+    }
+
+    @Test
+    public void combinedTest() {
+        String input = "\t \t\tAsdf!\n" +
+                " 88  gigGlt, pFOf\n\n" +
+                " 12x \tsrou'sv aasda\n\t\t\n";
+
+        ArrayList<String> expected = new ArrayList<>();
+        expected.add("Asdf!");
+        expected.add("gigGlt, pFOf");
         expected.add("srou'sv aasda");
 
         ArrayList<String> actual = TextParser.parseDeckList(input);
