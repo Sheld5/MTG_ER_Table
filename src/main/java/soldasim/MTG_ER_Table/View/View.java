@@ -54,6 +54,11 @@ public class View extends Application implements Runnable {
         mainStage.show();
     }
 
+    @Override
+    public void stop() {
+        controller.notifyViewTerminated();
+    }
+
     /**
      * Initialize the view.
      */

@@ -5,6 +5,8 @@ package soldasim.MTG_ER_Table.Controller;
  */
 class WorkData {
 
+    Boolean viewTerminated = false;
+
     String deckList = "";
 
 }

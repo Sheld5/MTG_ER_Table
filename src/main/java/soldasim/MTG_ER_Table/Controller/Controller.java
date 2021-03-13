@@ -35,6 +35,7 @@ public class Controller {
     public void start() {
         waitForView();
         workLoop();
+        exit();
     }
 
     /**
@@ -72,7 +73,6 @@ public class Controller {
      */
     private void workLoop() {
         while (true) {
-
             workLock.lock();
             try {
                 while (!workReady) {
@@ -85,8 +85,9 @@ public class Controller {
             } finally {
                 workLock.unlock();
             }
-            doWork();
 
+            if (tmpWork.viewTerminated) break;
+            doWork();
         }
     }
 
@@ -103,6 +104,20 @@ public class Controller {
      */
     private void doWork() {
         doWorkDeckList();
+    }
+
+    /**
+     * Called by the view on termination.
+     */
+    public void notifyViewTerminated() {
+        workLock.lock();
+        try {
+            work.viewTerminated = true;
+            workReady = true;
+            workCond.signal();
+        } finally {
+            workLock.unlock();
+        }
     }
 
     /**
@@ -129,6 +144,13 @@ public class Controller {
     private void doWorkDeckList() {
         if (tmpWork.deckList.equals("")) return;
         view.giveCardList(TextParser.parseDeckList(tmpWork.deckList));
+    }
+
+    /**
+     * Actions performed before program ends.
+     */
+    private void exit() {
+        // nothing
     }
 
 }
