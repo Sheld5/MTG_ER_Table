@@ -24,8 +24,7 @@ class EvictingQueueTest {
             BufferedImage takenItem = queue.take();
             assertEquals(addedItem, takenItem);
             assertEquals(0, queue.size());
-        }
-        catch (InterruptedException exception) {
+        } catch (InterruptedException exception) {
             System.out.println(exception.getMessage());
         }
     }
@@ -39,8 +38,7 @@ class EvictingQueueTest {
             //System.out.print("take() from empty queue finished\n");
             assertEquals(null, noItem);
             assertEquals(0, queue.size());
-        }
-        catch (InterruptedException exception) {
+        } catch (InterruptedException exception) {
             System.out.println(exception.getMessage());
         }
     }
@@ -61,8 +59,7 @@ class EvictingQueueTest {
             assertEquals(item1, takenItem1);
             assertEquals(item2, takenItem2);
             assertEquals(item3, takenItem3);
-        }
-        catch (InterruptedException exception) {
+        } catch (InterruptedException exception) {
             System.out.println(exception.getMessage());
         }
     }
@@ -76,23 +73,20 @@ class EvictingQueueTest {
 
         try {
             queue.add(item0);
-        }
-        catch (InterruptedException exception) {
+        } catch (InterruptedException exception) {
             System.out.println(exception.getMessage());
         }
         for (int i = 1; i < EvictingQueue.BUFFER_CAPACITY; i++) {
             try {
                 queue.add(item1);
-            }
-            catch (InterruptedException exception) {
+            } catch (InterruptedException exception) {
                 System.out.println(exception.getMessage());
             }
         }
         assertEquals(EvictingQueue.BUFFER_CAPACITY, queue.size());
         try {
             queue.add(item2);
-        }
-        catch (InterruptedException exception) {
+        } catch (InterruptedException exception) {
             System.out.println(exception.getMessage());
         }
         assertEquals(EvictingQueue.BUFFER_CAPACITY, queue.size());
@@ -100,15 +94,13 @@ class EvictingQueueTest {
         try {
             BufferedImage takenFirst = queue.take();
             assertEquals(item1, takenFirst);
-        }
-        catch (InterruptedException exception) {
+        } catch (InterruptedException exception) {
             System.out.println(exception.getMessage());
         }
         for (int i = 0; i < EvictingQueue.BUFFER_CAPACITY - 2; i++) {
             try {
                 queue.take();
-            }
-            catch (InterruptedException exception) {
+            } catch (InterruptedException exception) {
                 System.out.println(exception.getMessage());
             }
         }
@@ -116,8 +108,7 @@ class EvictingQueueTest {
         try {
             BufferedImage takenLast = queue.take();
             assertEquals(item2, takenLast);
-        }
-        catch (InterruptedException exception) {
+        } catch (InterruptedException exception) {
             System.out.println(exception.getMessage());
         }
     }
