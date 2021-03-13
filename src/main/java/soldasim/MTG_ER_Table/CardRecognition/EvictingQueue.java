@@ -36,7 +36,7 @@ public class EvictingQueue {
      */
     public BufferedImage take() throws EmptyStackException, InterruptedException {
         if (itemsInQueue >= 0) {
-            BufferedImage ret = (BufferedImage) buffer.take();
+            BufferedImage ret = buffer.take();
             itemsInQueue -= 1;
             return ret;
         }
