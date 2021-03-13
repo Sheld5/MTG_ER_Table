@@ -15,6 +15,7 @@ import java.util.List;
 public class ScreenCapture {
 
     private static final int MAX_TITLE_LENGTH = 512;
+    private static final int FW_TITLE_REFRESH_RATE = 60; // times per second
 
     private static ForegroundWindowUpdater fwUpdater;
 
@@ -82,13 +83,26 @@ public class ScreenCapture {
 
         @Override
         public void run() {
+            long startTime, waitTime;
+
             while (run) {
+                startTime = System.currentTimeMillis();
+
                 String newWindowTitle = getForegroundWindowTitle();
-                if (newWindowTitle.equals(windowTitle)) continue;
-                windowTitle = newWindowTitle;
-                view.giveForegroundWindowTitle(windowTitle);
+                if (!newWindowTitle.equals(windowTitle)) {
+                    windowTitle = newWindowTitle;
+                    view.giveForegroundWindowTitle(windowTitle);
+                }
+
+                waitTime = (long)(1000 / FW_TITLE_REFRESH_RATE) - (System.currentTimeMillis() - startTime);
+                if (waitTime > 0) {
+                    try {
+                        Thread.sleep(waitTime);
+                    } catch (InterruptedException ignored) {}
+                }
             }
         }
+        
     }
 
 }
