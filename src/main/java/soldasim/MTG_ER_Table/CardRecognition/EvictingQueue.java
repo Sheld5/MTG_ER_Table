@@ -6,7 +6,7 @@ import java.util.concurrent.ArrayBlockingQueue;
 
 public class EvictingQueue {
 
-    private static final int BUFFER_CAPACITY = 10;
+    public static final int BUFFER_CAPACITY = 10;
 
     private final ArrayBlockingQueue<BufferedImage> buffer = new ArrayBlockingQueue<>(BUFFER_CAPACITY);
     private int itemsInQueue;
@@ -34,8 +34,8 @@ public class EvictingQueue {
      * @return oldest item from queue, null when called while buffer is empty
      * @throws InterruptedException inherited from "ArrayBlockingQueue"'s method "take()"
      */
-    public BufferedImage take() throws EmptyStackException, InterruptedException {
-        if (itemsInQueue >= 0) {
+    public BufferedImage take() throws InterruptedException {
+        if (itemsInQueue > 0) {
             BufferedImage ret = buffer.take();
             itemsInQueue -= 1;
             return ret;
