@@ -26,7 +26,6 @@ public class Controller {
      */
     public Controller() {
         work = new WorkData();
-        tmpWork = new WorkData();
     }
 
     /**
