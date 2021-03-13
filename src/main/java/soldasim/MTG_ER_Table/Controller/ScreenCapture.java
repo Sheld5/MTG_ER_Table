@@ -1,42 +1,94 @@
 package soldasim.MTG_ER_Table.Controller;
 
-import java.awt.*;
-import java.awt.image.BufferedImage;
+import com.sun.jna.Native;
+import com.sun.jna.platform.DesktopWindow;
+import com.sun.jna.platform.WindowUtils;
+import com.sun.jna.platform.win32.User32;
+import com.sun.jna.platform.win32.WinDef;
+import soldasim.MTG_ER_Table.View.View;
+
+import java.util.List;
 
 /**
- * Captures parts of the screen or windows of applications.
+ * Gets information about other running applications and captures their windows.
  */
 public class ScreenCapture {
 
-    private static Robot robot;
-    private static Rectangle screen;
+    private static final int MAX_TITLE_LENGTH = 512;
+
+    private static ForegroundWindowUpdater fwUpdater;
 
     /**
-     * Initialize. Is to be called before calling other functions.
-     * @throws AWTException
+     * Return a list of all active windows.
+     * @return a List of DesktopWindow instances describing each active window
      */
-    public static void init() throws AWTException {
-        robot = new Robot();
-        screen = new Rectangle(Toolkit.getDefaultToolkit().getScreenSize());
+    public static List<DesktopWindow> getWindowList() {
+        return WindowUtils.getAllWindows(true);
     }
 
     /**
-     * Initialize. Is to be called before calling other functions.
-     * Set the screen size to the given size instead of trying to get the screen size from the system.
-     * @param screenSize the size of the screen in pixels
-     * @throws AWTException
+     * Return the title of the window in the foreground.
+     * @return a String containing the title
      */
-    public static void init(Dimension screenSize) throws AWTException {
-        robot = new Robot();
-        screen = new Rectangle(screenSize);
+    public static String getForegroundWindowTitle() {
+        char[] title = new char[MAX_TITLE_LENGTH];
+        User32 user = User32.INSTANCE;
+        WinDef.HWND foregroundWindow = user.GetForegroundWindow();
+        user.GetWindowText(foregroundWindow, title, MAX_TITLE_LENGTH);
+        return Native.toString(title);
     }
 
     /**
-     * Return an image of the whole screen.
-     * @return the screen captured in a BufferedImage
+     * Start a new thread that continuously updates the foreground window title in the view.
+     * Only the thread created from the last call of this function will be running.
+     * @param view a reference to the view which is to be continuously updated
      */
-    public static BufferedImage getScreen() {
-        return robot.createScreenCapture(screen);
+    static void startUpdatingForegroundWindow(View view) {
+        if (fwUpdater != null) {
+            fwUpdater.run = false;
+        }
+        fwUpdater = new ForegroundWindowUpdater(view);
+        Thread updaterThread = new Thread(fwUpdater);
+        updaterThread.start();
+    }
+
+    /**
+     * Stop updating the foreground window title in the view.
+     */
+    static void stopUpdatingForegroundWindow() {
+        if (fwUpdater == null) return;
+        fwUpdater.run = false;
+        fwUpdater = null;
+    }
+
+    /**
+     * Returns whether there is a thread running which is updating the foreground window title in the view.
+     * @return true if there is a such thread running, false otherwise
+     */
+    static boolean isUpdatingFWTitle() {
+        return fwUpdater != null;
+    }
+
+    /**
+     * Runnable class which continuously gives the view updates on the foreground window title.
+     */
+    private static class ForegroundWindowUpdater implements Runnable {
+
+        private final View view;
+        private boolean run = true;
+        private String windowTitle = "";
+
+        ForegroundWindowUpdater(View view) {this.view = view;}
+
+        @Override
+        public void run() {
+            while (run) {
+                String newWindowTitle = getForegroundWindowTitle();
+                if (newWindowTitle.equals(windowTitle)) continue;
+                windowTitle = newWindowTitle;
+                view.giveForegroundWindowTitle(windowTitle);
+            }
+        }
     }
 
 }

@@ -2,7 +2,6 @@ package soldasim.MTG_ER_Table.Controller;
 
 import soldasim.MTG_ER_Table.View.View;
 
-import javax.smartcardio.Card;
 import java.util.ArrayList;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
@@ -14,8 +13,8 @@ import java.util.concurrent.locks.ReentrantLock;
  */
 public class Controller {
 
-    private View view;
-    private CardDownloader cardDownloader;
+    View view;
+    private final CardDownloader cardDownloader;
 
     private final Lock workLock = new ReentrantLock();
     private final Condition workCond = workLock.newCondition();
@@ -23,6 +22,24 @@ public class Controller {
 
     private WorkData work;
     private WorkData tmpWork;
+
+    /**
+     * Structure for storing work data.
+     */
+    private static class WorkData {
+
+        Boolean viewTerminated = false;
+
+        String deckList = "";
+        Update updateFW = Update.NOTHING;
+
+    }
+
+    public enum Update {
+        START,
+        STOP,
+        NOTHING
+    }
 
     /**
      * Initialize.
@@ -112,6 +129,7 @@ public class Controller {
      */
     private void doWork() {
         doWorkDeckList();
+        doWorkUpdateFW();
     }
 
     /**
@@ -158,10 +176,40 @@ public class Controller {
     }
 
     /**
+     * Called by the view to request the controller to start or stop updating the foreground window title.
+     * @param update value which determines whether the updating is to be started or stopped
+     * @see View
+     */
+    public void giveWorkUpdateFW(Update update) {
+        workLock.lock();
+        try {
+            work.updateFW = update;
+            workReady = true;
+            workCond.signal();
+        } finally {
+            workLock.unlock();
+        }
+    }
+
+    /**
+     * Check if the view has requested a change in updating the foreground window title, perform the change if so.
+     */
+    private void doWorkUpdateFW() {
+        if (tmpWork.updateFW == Update.NOTHING) return;
+        if (tmpWork.updateFW == Update.STOP) {
+            ScreenCapture.stopUpdatingForegroundWindow();
+            return;
+        }
+        if (!ScreenCapture.isUpdatingFWTitle()) {
+            ScreenCapture.startUpdatingForegroundWindow(view);
+        }
+    }
+
+    /**
      * Actions performed before program ends.
      */
     private void exit() {
-        // nothing
+        ScreenCapture.stopUpdatingForegroundWindow();
     }
 
 }

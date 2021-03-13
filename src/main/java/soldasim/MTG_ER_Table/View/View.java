@@ -6,6 +6,7 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
@@ -27,11 +28,17 @@ public class View extends Application implements Runnable {
     private static final Insets PADDING = new Insets(12, 12, 12, 12);
     private static final int SPACING = 12;
 
+    private static final String UPDATE_FW_BUTTON_START_TEXT = "start updating";
+    private static final String UPDATE_FW_BUTTON_STOP_TEXT = "stop updating";
+
     public static Controller controller;
 
     private Stage mainStage;
     private Scene testScene;
-    private ImageView imageView;
+    private ImageView cardImageView;
+    private Label foregroundWindowLabel;
+    private Button updateFWButton;
+    private boolean updatingFW = false;
 
     /**
      * Call Application.launch() to launch the view.
@@ -74,7 +81,11 @@ public class View extends Application implements Runnable {
 
     public void giveCardImages(ArrayList<BufferedImage> cardImages) {
         if (cardImages.isEmpty()) return;
-        Platform.runLater(() -> imageView.setImage(ViewUtils.getImage(cardImages.get(0))));
+        Platform.runLater(() -> cardImageView.setImage(ViewUtils.getImage(cardImages.get(0))));
+    }
+
+    public void giveForegroundWindowTitle(String foregroundWindowTitle) {
+        Platform.runLater(() -> foregroundWindowLabel.setText(foregroundWindowTitle));
     }
 
     private void initMainStage(Scene scene) {
@@ -84,9 +95,9 @@ public class View extends Application implements Runnable {
     }
 
     private void initTestScene() {
-                    imageView = new ImageView();
+                    cardImageView = new ImageView();
 
-                Pane imagePane = new Pane(imageView);
+                Pane imagePane = new Pane(cardImageView);
                 imagePane.setPrefSize(256, 256);
 
                     TextArea deckList = new TextArea();
@@ -99,7 +110,17 @@ public class View extends Application implements Runnable {
                 deckArea.setSpacing(SPACING);
                 deckArea.setPrefSize(128, 256);
 
-            HBox content = new HBox(imagePane, deckArea);
+                    foregroundWindowLabel = new Label();
+
+                    updateFWButton = new Button(UPDATE_FW_BUTTON_START_TEXT);
+                    updateFWButton.setOnAction(event -> updateFWButtonPressed());
+
+                VBox windowsArea = new VBox(foregroundWindowLabel, updateFWButton);
+                windowsArea.setAlignment(Pos.CENTER);
+                windowsArea.setSpacing(SPACING);
+                windowsArea.setPrefSize(128, 256);
+
+            HBox content = new HBox(imagePane, deckArea, windowsArea);
             content.setAlignment(Pos.CENTER);
             content.setSpacing(SPACING);
             content.setPadding(PADDING);
@@ -109,6 +130,18 @@ public class View extends Application implements Runnable {
 
     private void loadButtonPressed(TextArea deckList) {
         controller.giveWorkDeckList(deckList.getText());
+    }
+
+    private void updateFWButtonPressed() {
+        if (updatingFW) {
+            updateFWButton.setText(UPDATE_FW_BUTTON_START_TEXT);
+            controller.giveWorkUpdateFW(Controller.Update.STOP);
+            updatingFW = false;
+        } else {
+            updateFWButton.setText(UPDATE_FW_BUTTON_STOP_TEXT);
+            controller.giveWorkUpdateFW(Controller.Update.START);
+            updatingFW = true;
+        }
     }
 
 }
