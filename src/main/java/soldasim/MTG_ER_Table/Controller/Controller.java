@@ -14,11 +14,20 @@ public class Controller {
 
     private View view;
 
-    private final Lock workLock = new ReentrantLock();
-    private final Condition workCond = workLock.newCondition();
-    private boolean workReady = false;
+    final Lock workLock = new ReentrantLock();
+    final Condition workCond = workLock.newCondition();
+    boolean workReady = false;
 
-    private String deckList = "";
+    private WorkData work;
+    private WorkData tmpWork;
+
+    /**
+     * Initialize.
+     */
+    public Controller() {
+        work = new WorkData();
+        tmpWork = new WorkData();
+    }
 
     /**
      * Start the program.
@@ -71,18 +80,26 @@ public class Controller {
                         workCond.await();
                     } catch (InterruptedException ignored) {}
                 }
-                doWork();
+                copyAndClearWork();
                 workReady = false;
             } finally {
                 workLock.unlock();
             }
+            doWork();
 
         }
     }
 
     /**
-     * Do all work that is ready.
-     * This function is called with acquired workLock.
+     * Copy work to tmpWork and clear work.
+     */
+    private void copyAndClearWork() {
+        tmpWork = work;
+        work = new WorkData();
+    }
+
+    /**
+     * Do all work prepared in tmpWork.
      */
     private void doWork() {
         doWorkDeckList();
@@ -96,7 +113,7 @@ public class Controller {
     public void giveWorkDeckList(String deckList) {
         workLock.lock();
         try {
-            this.deckList = deckList;
+            work.deckList = deckList;
             workReady = true;
             workCond.signal();
         } finally {
@@ -109,16 +126,8 @@ public class Controller {
      * parse it and give to the view if so.
      */
     private void doWorkDeckList() {
-        String tmp;
-        workLock.lock();
-        try {
-            if (deckList.equals("")) return;
-            tmp = deckList;
-            deckList = "";
-        } finally {
-            workLock.unlock();
-        }
-        view.giveCardList(TextParser.parseDeckList(tmp));
+        if (tmpWork.deckList.equals("")) return;
+        view.giveCardList(TextParser.parseDeckList(tmpWork.deckList));
     }
 
 }
