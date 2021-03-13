@@ -62,6 +62,17 @@ public class View extends Application implements Runnable {
         initMainStage(testScene);
     }
 
+    /**
+     * Called by the controller to give the view a list of card names to be displayed.
+     * @param cardList a list of individual card names
+     */
+    public void giveCardList(ArrayList<String> cardList) {
+        Platform.runLater(() -> {
+            if (cardList.isEmpty()) return;
+            label.setText(cardList.get(0));
+        });
+    }
+
     private void initMainStage(Scene scene) {
         mainStage.setTitle(WINDOW_TITLE);
         mainStage.setResizable(false);
@@ -93,14 +104,7 @@ public class View extends Application implements Runnable {
     }
 
     private void loadButtonPressed(TextArea deckList) {
-        controller.requestParseDeckList(deckList.getText());
-    }
-
-    public void giveCardList(ArrayList<String> cardList) {
-        Platform.runLater(() -> {
-            if (cardList.isEmpty()) return;
-            label.setText(cardList.get(0));
-        });
+        controller.giveWorkDeckList(deckList.getText());
     }
 
 }
