@@ -2,6 +2,8 @@ package soldasim.MTG_ER_Table.Controller;
 
 import soldasim.MTG_ER_Table.View.View;
 
+import javax.smartcardio.Card;
+import java.util.ArrayList;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -13,6 +15,7 @@ import java.util.concurrent.locks.ReentrantLock;
 public class Controller {
 
     private View view;
+    private CardDownloader cardDownloader;
 
     private final Lock workLock = new ReentrantLock();
     private final Condition workCond = workLock.newCondition();
@@ -26,6 +29,7 @@ public class Controller {
      */
     public Controller() {
         initWorkStructure();
+        cardDownloader = new CardDownloader();
     }
 
     private void initWorkStructure() {
@@ -144,12 +148,13 @@ public class Controller {
     }
 
     /**
-     * Check if there is a deck list waiting to be parsed,
-     * parse it and give to the view if so.
+     * Check if there is a deck list ready, download cards if so.
      */
     private void doWorkDeckList() {
         if (tmpWork.deckList.equals("")) return;
-        view.giveCardList(TextParser.parseDeckList(tmpWork.deckList));
+        ArrayList<String> cardNames = TextParser.parseDeckList(tmpWork.deckList);
+        cardDownloader.downloadCards(cardNames);
+        view.giveCardImages(cardDownloader.getCardImages());
     }
 
     /**

@@ -6,14 +6,15 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
-import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import soldasim.MTG_ER_Table.Controller.Controller;
 
+import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 
 /**
@@ -30,7 +31,7 @@ public class View extends Application implements Runnable {
 
     private Stage mainStage;
     private Scene testScene;
-    private Label label;
+    private ImageView imageView;
 
     /**
      * Call Application.launch() to launch the view.
@@ -71,16 +72,9 @@ public class View extends Application implements Runnable {
         initMainStage(testScene);
     }
 
-    /**
-     * Called by the controller to give the view a list of card names to be displayed.
-     * @param cardList a list of individual card names
-     * @see Controller
-     */
-    public void giveCardList(ArrayList<String> cardList) {
-        Platform.runLater(() -> {
-            if (cardList.isEmpty()) return;
-            label.setText(cardList.get(0));
-        });
+    public void giveCardImages(ArrayList<BufferedImage> cardImages) {
+        if (cardImages.isEmpty()) return;
+        Platform.runLater(() -> imageView.setImage(ViewUtils.getImage(cardImages.get(0))));
     }
 
     private void initMainStage(Scene scene) {
@@ -90,9 +84,9 @@ public class View extends Application implements Runnable {
     }
 
     private void initTestScene() {
-                    label = new Label();
+                    imageView = new ImageView();
 
-                Pane imagePane = new Pane(label);
+                Pane imagePane = new Pane(imageView);
                 imagePane.setPrefSize(256, 256);
 
                     TextArea deckList = new TextArea();
