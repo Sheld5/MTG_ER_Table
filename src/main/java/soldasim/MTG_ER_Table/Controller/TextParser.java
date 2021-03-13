@@ -21,7 +21,7 @@ public class TextParser {
         String[] lines = deckList.split("\\r?\\n");
         for (String line : lines) {
             StringBuilder cardName = new StringBuilder();
-            String[] words = line.split(" ");
+            String[] words = line.split("\\s+");
             boolean empty = true;
             for (String word : words) {
                 if (namePattern.matcher(word).matches()) {
@@ -33,7 +33,9 @@ public class TextParser {
                     cardName.append(word);
                 }
             }
-            cardNames.add(cardName.toString());
+            if (!empty) {
+                cardNames.add(cardName.toString());
+            }
         }
 
         return cardNames;
