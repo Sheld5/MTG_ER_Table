@@ -16,6 +16,7 @@ public class Controller {
 
     /**
      * This structure is used for storing data about work requested to be done by Controller by other application modules.
+     * @see WorkData
      */
     public WorkData work;
 
