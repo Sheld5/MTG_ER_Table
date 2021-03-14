@@ -17,13 +17,14 @@ import java.util.List;
 public class ScreenCapture {
 
     private static final int MAX_TITLE_LENGTH = 512;
-    private static final int FW_TITLE_REFRESH_RATE = 60; // times per second
+    private static final int RUNNABLES_REFRESH_RATE = 60; // times per second
 
-    private static View view;
     private static ForegroundWindowUpdater fwUpdater;
+    private static WindowCapturer windowCapturer;
+    private static Robot robot;
+
     private static String fwTitle = "";
     private static WinDef.HWND fwHandle;
-    private static Robot robot;
 
     /**
      * Return a list of all active windows.
@@ -74,49 +75,95 @@ public class ScreenCapture {
     }
 
     /**
-     * Start a new thread that continuously updates the foreground window title in the view.
+     * Return the title of the last application window that has been in the foreground
+     * while the ForegroundWindowUpdater was running excluding the window of this application.
+     * @return String containing title of the last foreground application window
+     */
+    static String getLastFWTitle() {
+        return fwTitle;
+    }
+
+    /**
+     * Return the WinDef.HWND handle of the last application window that has been in the foreground
+     * while the ForegroundWindowUpdater was running excluding the window of this application.
+     * @return WinDef.HWND of the last foreground application window
+     */
+    static WinDef.HWND getLastFWHandle() {
+        return fwHandle;
+    }
+
+    /**
+     * Start the ForegroundWindowUpdater on a new thread.
      * Only the thread created from the last call of this function will be running.
      * @param view a reference to the view which is to be continuously updated
      */
-    static void startUpdatingForegroundWindow(View view) {
+    static void startUpdatingFW(View view) {
         if (fwUpdater != null) {
             fwUpdater.run = false;
         }
-        ScreenCapture.view = view;
-        fwUpdater = new ForegroundWindowUpdater();
+        fwUpdater = new ForegroundWindowUpdater(view);
         Thread updaterThread = new Thread(fwUpdater);
         updaterThread.start();
     }
 
     /**
-     * Stop updating the foreground window title in the view.
+     * Stop the ForegroundWindowUpdater.
      */
-    static void stopUpdatingForegroundWindow() {
+    static void stopUpdatingFW() {
         if (fwUpdater == null) return;
         fwUpdater.run = false;
         fwUpdater = null;
     }
 
     /**
-     * Returns whether there is a thread running which is updating the foreground window title in the given view.
-     * @param view the instance of View that is to be checked whether it is being updated
+     * Returns whether there is a ForegroundWindowUpdater running.
      * @return true if there is such thread running, false otherwise
      */
-    static boolean isUpdatingFWTitle(View view) {
-        return fwUpdater != null && ScreenCapture.view == view;
+    static boolean isUpdatingFWTitle() {
+        return fwUpdater != null;
     }
 
     /**
-     * Runnable class which continuously gives the view updates on the foreground window title.
+     * Start a new thread that continuously makes the given view display the selected window.
+     * The window is selected by running the ForegroundWindowUpdater.
+     * Only the thread created from the last call of this function will be running.
+     * @param view a reference to the view which is to be continuously updated
+     */
+    static void startCapturingWindow(View view) {
+        if (windowCapturer != null) {
+            windowCapturer.run = false;
+        }
+        windowCapturer = new WindowCapturer(view);
+        Thread capturerThread = new Thread(windowCapturer);
+        capturerThread.start();
+    }
+
+    /**
+     * Stop the WindowCapturer.
+     */
+    static void stopCapturingWindow() {
+        if (windowCapturer == null) return;
+        windowCapturer.run = false;
+        windowCapturer = null;
+    }
+
+    /**
+     * Runnable class which continuously updates the window stored in fwHandle and its title stored in fwTitle.
+     * Also continuously updates the FW title in the view accordingly.
      */
     private static class ForegroundWindowUpdater implements Runnable {
 
-        private boolean run = true;
+        private final View view;
+        private boolean run;
+
+        private ForegroundWindowUpdater(View view) {
+            this.view = view;
+            run = true;
+        }
 
         @Override
         public void run() {
             String thisWindowTitle = View.getWindowTitle();
-
             while (run) {
                 long startTime = System.currentTimeMillis();
 
@@ -126,10 +173,9 @@ public class ScreenCapture {
                     fwHandle = newWindow;
                     fwTitle = newWindowTitle;
                     view.giveForegroundWindowTitle(fwTitle);
-                    view.displayImage(captureWindow(fwHandle));
                 }
 
-                long waitTime = (long)(1000 / FW_TITLE_REFRESH_RATE) - (System.currentTimeMillis() - startTime);
+                long waitTime = (long)(1000 / RUNNABLES_REFRESH_RATE) - (System.currentTimeMillis() - startTime);
                 if (waitTime > 0) {
                     try {
                         Thread.sleep(waitTime);
@@ -141,21 +187,35 @@ public class ScreenCapture {
     }
 
     /**
-     * Return the title of the last application window that has been in the foreground
-     * while the ForegroundWindowUpdater was running excluding the window of this application.
-     * @return String containing title of the last foreground application window
+     * Runnable class which continuously takes screenshot of the window currently stored in fwHandle
+     * and gives them to the view. The window stored in fwHandle is determined by the ForegroundWindowUpdater.
      */
-    public static String getLastFWTitle() {
-        return fwTitle;
-    }
+    private static class WindowCapturer implements Runnable {
 
-    /**
-     * Return the WinDef.HWND handle of the last application window that has been in the foreground
-     * while the ForegroundWindowUpdater was running excluding the window of this application.
-     * @return WinDef.HWND of the last foreground application window
-     */
-    public static WinDef.HWND getLastFWHandle() {
-        return fwHandle;
+        private final View view;
+        private boolean run;
+
+        private WindowCapturer(View view) {
+            this.view = view;
+            run = true;
+        }
+
+        @Override
+        public void run() {
+            while (run) {
+                long startTime = System.currentTimeMillis();
+
+                if (fwHandle != null) view.displayImage(captureWindow(fwHandle));
+
+                long waitTime = (long)(1000 / RUNNABLES_REFRESH_RATE) - (System.currentTimeMillis() - startTime);
+                if (waitTime > 0) {
+                    try {
+                        Thread.sleep(waitTime);
+                    } catch (InterruptedException ignored) {}
+                }
+            }
+        }
+
     }
 
 }

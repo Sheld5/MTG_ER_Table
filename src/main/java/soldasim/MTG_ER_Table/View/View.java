@@ -16,9 +16,7 @@ import javafx.stage.Stage;
 import soldasim.MTG_ER_Table.Controller.Controller;
 import soldasim.MTG_ER_Table.Controller.WorkData;
 
-import java.awt.*;
 import java.awt.image.BufferedImage;
-import java.util.ArrayList;
 
 /**
  * View according to the MVC application model.
@@ -30,8 +28,8 @@ public class View extends Application implements Runnable {
     private static final Insets PADDING = new Insets(12, 12, 12, 12);
     private static final int SPACING = 12;
 
-    private static final String UPDATE_FW_BUTTON_START_TEXT = "start updating";
-    private static final String UPDATE_FW_BUTTON_STOP_TEXT = "stop updating";
+    private static final String UPDATE_FW_BUTTON_START_TEXT = "start selecting";
+    private static final String UPDATE_FW_BUTTON_STOP_TEXT = "stop selecting";
 
     public static Controller controller;
 
@@ -73,21 +71,25 @@ public class View extends Application implements Runnable {
         controller.work.notifyViewTerminated();
     }
 
-    /**
-     * Initialize the view.
-     */
-    private void initialize() {
-        initTestScene();
-        initMainStage(testScene);
-    }
-
     public void displayImage(BufferedImage image) {
-        if (image == null) return;
-        Platform.runLater(() -> cardImageView.setImage(ViewUtils.getImage(ViewUtils.rescaleImage(image, 256, 256))));
+        if (image == null) {
+            Platform.runLater(() -> cardImageView.setImage(null));
+        } else {
+            Platform.runLater(() -> cardImageView.setImage(ViewUtils.getImage(ViewUtils.rescaleImage(image, 256, 256))));
+        }
     }
 
     public void giveForegroundWindowTitle(String foregroundWindowTitle) {
         Platform.runLater(() -> foregroundWindowLabel.setText(foregroundWindowTitle));
+    }
+
+    public static String getWindowTitle() {
+        return WINDOW_TITLE;
+    }
+
+    private void initialize() {
+        initTestScene();
+        initMainStage(testScene);
     }
 
     private void initMainStage(Scene scene) {
@@ -144,10 +146,6 @@ public class View extends Application implements Runnable {
             controller.work.requestUpdateFW(WorkData.Update.START);
             updatingFW = true;
         }
-    }
-
-    public static String getWindowTitle() {
-        return WINDOW_TITLE;
     }
 
 }

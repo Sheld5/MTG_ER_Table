@@ -34,6 +34,7 @@ public class Controller {
      */
     public void start() {
         waitForView();
+        ScreenCapture.startCapturingWindow(view);
         workLoop();
         exit();
     }
@@ -123,11 +124,11 @@ public class Controller {
     private void doWorkUpdateFW(WorkData work) {
         if (work.updateFW == WorkData.Update.NOTHING) return;
         if (work.updateFW == WorkData.Update.STOP) {
-            ScreenCapture.stopUpdatingForegroundWindow();
+            ScreenCapture.stopUpdatingFW();
             return;
         }
-        if (!ScreenCapture.isUpdatingFWTitle(view)) {
-            ScreenCapture.startUpdatingForegroundWindow(view);
+        if (!ScreenCapture.isUpdatingFWTitle()) {
+            ScreenCapture.startUpdatingFW(view);
         }
     }
 
@@ -135,7 +136,8 @@ public class Controller {
      * Actions performed before program ends.
      */
     private void exit() {
-        ScreenCapture.stopUpdatingForegroundWindow();
+        ScreenCapture.stopUpdatingFW();
+        ScreenCapture.stopCapturingWindow();
     }
 
 }
