@@ -122,7 +122,7 @@ public class Controller {
             ScreenCapture.stopUpdatingForegroundWindow();
             return;
         }
-        if (!ScreenCapture.isUpdatingFWTitle()) {
+        if (!ScreenCapture.isUpdatingFWTitle(view)) {
             ScreenCapture.startUpdatingForegroundWindow(view);
         }
     }

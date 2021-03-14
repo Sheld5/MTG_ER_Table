@@ -18,6 +18,7 @@ public class ScreenCapture {
     private static final int FW_TITLE_REFRESH_RATE = 60; // times per second
 
     private static ForegroundWindowUpdater fwUpdater;
+    private static View view;
 
     /**
      * Return a list of all active windows.
@@ -48,7 +49,8 @@ public class ScreenCapture {
         if (fwUpdater != null) {
             fwUpdater.run = false;
         }
-        fwUpdater = new ForegroundWindowUpdater(view);
+        ScreenCapture.view = view;
+        fwUpdater = new ForegroundWindowUpdater();
         Thread updaterThread = new Thread(fwUpdater);
         updaterThread.start();
     }
@@ -63,11 +65,12 @@ public class ScreenCapture {
     }
 
     /**
-     * Returns whether there is a thread running which is updating the foreground window title in the view.
-     * @return true if there is a such thread running, false otherwise
+     * Returns whether there is a thread running which is updating the foreground window title in the given view.
+     * @param view the instance of View that is to be checked whether it is being updated
+     * @return true if there is such thread running, false otherwise
      */
-    static boolean isUpdatingFWTitle() {
-        return fwUpdater != null;
+    static boolean isUpdatingFWTitle(View view) {
+        return fwUpdater != null && ScreenCapture.view == view;
     }
 
     /**
@@ -75,11 +78,8 @@ public class ScreenCapture {
      */
     private static class ForegroundWindowUpdater implements Runnable {
 
-        private final View view;
         private boolean run = true;
         private String windowTitle = "";
-
-        ForegroundWindowUpdater(View view) {this.view = view;}
 
         @Override
         public void run() {
