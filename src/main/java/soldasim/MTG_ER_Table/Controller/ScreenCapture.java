@@ -126,6 +126,7 @@ public class ScreenCapture {
                     fwHandle = newWindow;
                     fwTitle = newWindowTitle;
                     view.giveForegroundWindowTitle(fwTitle);
+                    view.displayImage(captureWindow(fwHandle));
                 }
 
                 long waitTime = (long)(1000 / FW_TITLE_REFRESH_RATE) - (System.currentTimeMillis() - startTime);

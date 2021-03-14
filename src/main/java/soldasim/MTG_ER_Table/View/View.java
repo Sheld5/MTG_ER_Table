@@ -16,6 +16,7 @@ import javafx.stage.Stage;
 import soldasim.MTG_ER_Table.Controller.Controller;
 import soldasim.MTG_ER_Table.Controller.WorkData;
 
+import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 
@@ -82,7 +83,7 @@ public class View extends Application implements Runnable {
 
     public void displayImage(BufferedImage image) {
         if (image == null) return;
-        Platform.runLater(() -> cardImageView.setImage(ViewUtils.getImage(image)));
+        Platform.runLater(() -> cardImageView.setImage(ViewUtils.getImage(ViewUtils.rescaleImage(image, 256, 256))));
     }
 
     public void giveForegroundWindowTitle(String foregroundWindowTitle) {
