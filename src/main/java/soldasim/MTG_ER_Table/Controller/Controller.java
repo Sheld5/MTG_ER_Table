@@ -11,7 +11,7 @@ import java.util.concurrent.locks.Lock;
  */
 public class Controller {
 
-    View view;
+    private View view;
     private final CardDownloader cardDownloader;
 
     /**

@@ -145,4 +145,8 @@ public class View extends Application implements Runnable {
         }
     }
 
+    public static String getWindowTitle() {
+        return WINDOW_TITLE;
+    }
+
 }

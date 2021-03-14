@@ -83,18 +83,18 @@ public class ScreenCapture {
 
         @Override
         public void run() {
-            long startTime, waitTime;
+            String thisWindowTitle = View.getWindowTitle();
 
             while (run) {
-                startTime = System.currentTimeMillis();
+                long startTime = System.currentTimeMillis();
 
                 String newWindowTitle = getForegroundWindowTitle();
-                if (!newWindowTitle.equals(windowTitle)) {
+                if (!(newWindowTitle.equals(windowTitle) || newWindowTitle.equals(thisWindowTitle))) {
                     windowTitle = newWindowTitle;
                     view.giveForegroundWindowTitle(windowTitle);
                 }
 
-                waitTime = (long)(1000 / FW_TITLE_REFRESH_RATE) - (System.currentTimeMillis() - startTime);
+                long waitTime = (long)(1000 / FW_TITLE_REFRESH_RATE) - (System.currentTimeMillis() - startTime);
                 if (waitTime > 0) {
                     try {
                         Thread.sleep(waitTime);
@@ -102,7 +102,7 @@ public class ScreenCapture {
                 }
             }
         }
-        
+
     }
 
 }
