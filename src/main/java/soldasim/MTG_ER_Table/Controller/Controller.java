@@ -2,6 +2,7 @@ package soldasim.MTG_ER_Table.Controller;
 
 import soldasim.MTG_ER_Table.View.View;
 
+import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.concurrent.locks.Lock;
 
@@ -109,7 +110,10 @@ public class Controller {
         if (work.deckList.equals("")) return;
         ArrayList<String> cardNames = TextParser.parseDeckList(work.deckList);
         cardDownloader.downloadCards(cardNames);
-        view.giveCardImages(cardDownloader.getCardImages());
+
+        ArrayList<BufferedImage> cardImages = cardDownloader.getCardImages();
+        if (cardImages.isEmpty()) return;
+        view.displayImage(cardImages.get(0));
     }
 
     /**

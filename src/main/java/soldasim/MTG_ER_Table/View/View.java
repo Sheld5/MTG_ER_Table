@@ -80,9 +80,9 @@ public class View extends Application implements Runnable {
         initMainStage(testScene);
     }
 
-    public void giveCardImages(ArrayList<BufferedImage> cardImages) {
-        if (cardImages.isEmpty()) return;
-        Platform.runLater(() -> cardImageView.setImage(ViewUtils.getImage(cardImages.get(0))));
+    public void displayImage(BufferedImage image) {
+        if (image == null) return;
+        Platform.runLater(() -> cardImageView.setImage(ViewUtils.getImage(image)));
     }
 
     public void giveForegroundWindowTitle(String foregroundWindowTitle) {
