@@ -3,9 +3,7 @@ package soldasim.MTG_ER_Table.Controller;
 import soldasim.MTG_ER_Table.View.View;
 
 import java.util.ArrayList;
-import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * Controller according to the MVC application model.
@@ -16,42 +14,17 @@ public class Controller {
     View view;
     private final CardDownloader cardDownloader;
 
-    private final Lock workLock = new ReentrantLock();
-    private final Condition workCond = workLock.newCondition();
-    private boolean workReady;
-
-    private WorkData work;
-    private WorkData tmpWork;
-
     /**
-     * Structure for storing work data.
+     * This structure is used for storing data about work requested to be done by Controller by other application modules.
      */
-    private static class WorkData {
-
-        Boolean viewTerminated = false;
-
-        String deckList = "";
-        Update updateFW = Update.NOTHING;
-
-    }
-
-    public enum Update {
-        START,
-        STOP,
-        NOTHING
-    }
+    public WorkData work;
 
     /**
      * Initialize.
      */
     public Controller() {
-        initWorkStructure();
-        cardDownloader = new CardDownloader();
-    }
-
-    private void initWorkStructure() {
-        workReady = false;
         work = new WorkData();
+        cardDownloader = new CardDownloader();
     }
 
     /**
@@ -98,105 +71,53 @@ public class Controller {
      */
     private void workLoop() {
         while (true) {
+            WorkData tmpWork;
+            Lock workLock = work.lock;
+
             workLock.lock();
             try {
-                while (!workReady) {
+                while (!work.ready) {
                     try {
-                        workCond.await();
+                        work.cond.await();
                     } catch (InterruptedException ignored) {}
                 }
-                copyAndClearWork();
-                workReady = false;
+                tmpWork = work;
+                work = new WorkData();
             } finally {
                 workLock.unlock();
             }
 
             if (tmpWork.viewTerminated) break;
-            doWork();
+            doWork(tmpWork);
         }
-    }
-
-    /**
-     * Copy work to tmpWork and clear work.
-     */
-    private void copyAndClearWork() {
-        tmpWork = work;
-        work = new WorkData();
     }
 
     /**
      * Do all work prepared in tmpWork.
      */
-    private void doWork() {
-        doWorkDeckList();
-        doWorkUpdateFW();
-    }
-
-    /**
-     * Called by the view on termination.
-     * @see View
-     */
-    public void notifyViewTerminated() {
-        workLock.lock();
-        try {
-            work.viewTerminated = true;
-            workReady = true;
-            workCond.signal();
-        } finally {
-            workLock.unlock();
-        }
-    }
-
-    /**
-     * Called by the view to give controller deck list from the user to be processed.
-     * Set workReady to true and signal controller that there is work ready.
-     * @param deckList String containing individual cards on separate lines
-     *                 Can contain additional white-spaces and card quantities.
-     * @see View
-     */
-    public void giveWorkDeckList(String deckList) {
-        workLock.lock();
-        try {
-            work.deckList = deckList;
-            workReady = true;
-            workCond.signal();
-        } finally {
-            workLock.unlock();
-        }
+    private void doWork(WorkData work) {
+        doWorkDeckList(work);
+        doWorkUpdateFW(work);
     }
 
     /**
      * Check if there is a deck list ready, download cards if so.
+     * @param work an instance of Controller.WorkData
      */
-    private void doWorkDeckList() {
-        if (tmpWork.deckList.equals("")) return;
-        ArrayList<String> cardNames = TextParser.parseDeckList(tmpWork.deckList);
+    private void doWorkDeckList(WorkData work) {
+        if (work.deckList.equals("")) return;
+        ArrayList<String> cardNames = TextParser.parseDeckList(work.deckList);
         cardDownloader.downloadCards(cardNames);
         view.giveCardImages(cardDownloader.getCardImages());
     }
 
     /**
-     * Called by the view to request the controller to start or stop updating the foreground window title.
-     * @param update value which determines whether the updating is to be started or stopped
-     * @see View
-     */
-    public void giveWorkUpdateFW(Update update) {
-        workLock.lock();
-        try {
-            work.updateFW = update;
-            workReady = true;
-            workCond.signal();
-        } finally {
-            workLock.unlock();
-        }
-    }
-
-    /**
      * Check if the view has requested a change in updating the foreground window title, perform the change if so.
+     * @param work an instance of Controller.WorkData
      */
-    private void doWorkUpdateFW() {
-        if (tmpWork.updateFW == Update.NOTHING) return;
-        if (tmpWork.updateFW == Update.STOP) {
+    private void doWorkUpdateFW(WorkData work) {
+        if (work.updateFW == WorkData.Update.NOTHING) return;
+        if (work.updateFW == WorkData.Update.STOP) {
             ScreenCapture.stopUpdatingForegroundWindow();
             return;
         }

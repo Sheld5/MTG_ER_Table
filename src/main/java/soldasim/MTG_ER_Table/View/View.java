@@ -14,6 +14,7 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import soldasim.MTG_ER_Table.Controller.Controller;
+import soldasim.MTG_ER_Table.Controller.WorkData;
 
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
@@ -68,7 +69,7 @@ public class View extends Application implements Runnable {
      */
     @Override
     public void stop() {
-        controller.notifyViewTerminated();
+        controller.work.notifyViewTerminated();
     }
 
     /**
@@ -129,17 +130,17 @@ public class View extends Application implements Runnable {
     }
 
     private void loadButtonPressed(TextArea deckList) {
-        controller.giveWorkDeckList(deckList.getText());
+        controller.work.giveDeckList(deckList.getText());
     }
 
     private void updateFWButtonPressed() {
         if (updatingFW) {
             updateFWButton.setText(UPDATE_FW_BUTTON_START_TEXT);
-            controller.giveWorkUpdateFW(Controller.Update.STOP);
+            controller.work.requestUpdateFW(WorkData.Update.STOP);
             updatingFW = false;
         } else {
             updateFWButton.setText(UPDATE_FW_BUTTON_STOP_TEXT);
-            controller.giveWorkUpdateFW(Controller.Update.START);
+            controller.work.requestUpdateFW(WorkData.Update.START);
             updatingFW = true;
         }
     }
