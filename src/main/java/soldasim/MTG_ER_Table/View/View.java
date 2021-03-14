@@ -8,6 +8,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
+import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
@@ -75,7 +76,8 @@ public class View extends Application implements Runnable {
         if (image == null) {
             Platform.runLater(() -> cardImageView.setImage(null));
         } else {
-            Platform.runLater(() -> cardImageView.setImage(ViewUtils.getImage(ViewUtils.rescaleImage(image, 256, 256))));
+            Image img = ViewUtils.getImage(ViewUtils.rescaleImage(image, 256, 256));
+            Platform.runLater(() -> cardImageView.setImage(img));
         }
     }
 
