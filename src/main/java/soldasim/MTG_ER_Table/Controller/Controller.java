@@ -141,6 +141,7 @@ public class Controller {
     private void doWorkRecognizeCard(WorkData work) {
         if (!work.recognizeCard) return;
         if (cardRecognizer == null) return;
+        view.displayCardImage(null);
         BufferedImage pic = WebcamController.getImage();
         Card card = cardRecognizer.recognizeCard(pic);
         view.displayCardImage(card.getImage());
