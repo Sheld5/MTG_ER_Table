@@ -35,6 +35,8 @@ public class CardRecognizer {
         Card bestCard = null;
         double bestMatch = -1;
         for (int i = 0; i < listSize; i++) {
+            BufferedImage image = cardImages.get(i);
+            if (image == null) continue;
             double match = matchCard(cardPhoto, cardImages.get(i));
             if (match > bestMatch) {
                 bestCard = cardList.get(i);
