@@ -56,7 +56,7 @@ public class CardRecognizer {
         int width = scaledImages[0].getWidth();
         int height = scaledImages[0].getHeight();
         int pixelCount = height * width;
-        int sampleCount = pixelCount * 3;
+        int sampleCount = pixelCount * 4;
 
         int[] photoPixels = new int[sampleCount];
         int[] imagePixels = new int[sampleCount];
@@ -64,13 +64,15 @@ public class CardRecognizer {
         imagePixels = scaledImages[1].getRaster().getPixels(0, 0, width, height, imagePixels);
 
         int diff = 0;
-        for (int i = 0; i < sampleCount; i++) {
-            diff += Math.abs(photoPixels[i] - imagePixels[i]);
+        for (int p = 0; p < pixelCount; p++) {
+            for (int s = 0; s < 3; s++) {
+                int index = p*4+s;
+                diff += Math.abs(photoPixels[index] - imagePixels[index]);
+            }
         }
-        int maxDiff = pixelCount * 17;
+        int maxDiff = pixelCount * 3 * 255;
 
         double ret = 1 - (double)diff/maxDiff;
-        if (ret < 0 || ret > 1) System.out.println("ERROR: CardRecognizer.matchCard()"); //todo
         return ret;
     }
 

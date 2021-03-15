@@ -15,7 +15,7 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import soldasim.MTG_ER_Table.Controller.Controller;
-import soldasim.MTG_ER_Table.Controller.WorkData;
+import soldasim.MTG_ER_Table.Controller.Request;
 
 import java.awt.image.BufferedImage;
 
@@ -36,8 +36,10 @@ public class View extends Application implements Runnable {
 
     private Stage mainStage;
     private Scene testScene;
+    private ImageView webcamView;
     private ImageView cardImageView;
-    private Label foregroundWindowLabel;
+    private ImageView windowCaptureView;
+    private Label selectedWindowLabel;
     private Button selectWindowButton;
     private boolean selectingWindow = false;
 
@@ -69,10 +71,19 @@ public class View extends Application implements Runnable {
      */
     @Override
     public void stop() {
-        controller.work.notifyViewTerminated();
+        controller.work.giveRequest(new Request.ViewTerminated());
     }
 
-    public void displayImage(BufferedImage image) {
+    public void displayWebcamView(BufferedImage image) {
+        if (image == null) {
+            Platform.runLater(() -> webcamView.setImage(null));
+        } else {
+            Image img = ViewUtils.getImage(ViewUtils.scaleImageToFit(image, 256, 256));
+            Platform.runLater(() -> webcamView.setImage(img));
+        }
+    }
+
+    public void displayCardImage(BufferedImage image) {
         if (image == null) {
             Platform.runLater(() -> cardImageView.setImage(null));
         } else {
@@ -81,8 +92,17 @@ public class View extends Application implements Runnable {
         }
     }
 
-    public void giveForegroundWindowTitle(String foregroundWindowTitle) {
-        Platform.runLater(() -> foregroundWindowLabel.setText(foregroundWindowTitle));
+    public void displayWindowCapture(BufferedImage image) {
+        if (image == null) {
+            Platform.runLater(() -> windowCaptureView.setImage(null));
+        } else {
+            Image img = ViewUtils.getImage(ViewUtils.scaleImageToFit(image, 256, 144));
+            Platform.runLater(() -> windowCaptureView.setImage(img));
+        }
+    }
+
+    public void giveSelectedWindowTitle(String foregroundWindowTitle) {
+        Platform.runLater(() -> selectedWindowLabel.setText(foregroundWindowTitle));
     }
 
     public static String getWindowTitle() {
@@ -101,10 +121,20 @@ public class View extends Application implements Runnable {
     }
 
     private void initTestScene() {
+                    webcamView = new ImageView();
+
+                    Button takePicButton = new Button("take picture");
+                    takePicButton.setOnAction(event -> takePicButtonPressed());
+
+                VBox webcamArea = new VBox(webcamView, takePicButton);
+                webcamArea.setAlignment(Pos.CENTER);
+                webcamArea.setSpacing(SPACING);
+                webcamArea.setPrefSize(256, 256);
+
                     cardImageView = new ImageView();
 
-                Pane imagePane = new Pane(cardImageView);
-                imagePane.setPrefSize(256, 256);
+                Pane cardImagePane = new Pane(cardImageView);
+                cardImagePane.setPrefSize(256, 256);
 
                     TextArea deckList = new TextArea();
 
@@ -116,17 +146,19 @@ public class View extends Application implements Runnable {
                 deckArea.setSpacing(SPACING);
                 deckArea.setPrefSize(128, 256);
 
-                    foregroundWindowLabel = new Label();
+                    windowCaptureView = new ImageView();
+
+                    selectedWindowLabel = new Label();
 
                     selectWindowButton = new Button(SELECT_WINDOW_BUTTON_START_TEXT);
                     selectWindowButton.setOnAction(event -> selectWindowButtonPressed());
 
-                VBox windowsArea = new VBox(foregroundWindowLabel, selectWindowButton);
+                VBox windowsArea = new VBox(windowCaptureView, selectedWindowLabel, selectWindowButton);
                 windowsArea.setAlignment(Pos.CENTER);
                 windowsArea.setSpacing(SPACING);
-                windowsArea.setPrefSize(128, 256);
+                windowsArea.setPrefSize(144, 256);
 
-            HBox content = new HBox(imagePane, deckArea, windowsArea);
+            HBox content = new HBox(webcamArea, cardImagePane, deckArea, windowsArea);
             content.setAlignment(Pos.CENTER);
             content.setSpacing(SPACING);
             content.setPadding(PADDING);
@@ -135,19 +167,23 @@ public class View extends Application implements Runnable {
     }
 
     private void loadButtonPressed(TextArea deckList) {
-        controller.work.giveDeckList(deckList.getText());
+        controller.work.giveRequest(new Request.DeckListUpdate(deckList.getText()));
     }
 
     private void selectWindowButtonPressed() {
         if (selectingWindow) {
             selectWindowButton.setText(SELECT_WINDOW_BUTTON_START_TEXT);
-            controller.work.requestUpdateFW(WorkData.Update.STOP);
+            controller.work.giveRequest(new Request.WindowSelecting(Request.WindowSelecting.Selecting.STOP));
             selectingWindow = false;
         } else {
             selectWindowButton.setText(SELECT_WINDOW_BUTTON_STOP_TEXT);
-            controller.work.requestUpdateFW(WorkData.Update.START);
+            controller.work.giveRequest(new Request.WindowSelecting(Request.WindowSelecting.Selecting.START));
             selectingWindow = true;
         }
+    }
+
+    private void takePicButtonPressed() {
+        controller.work.giveRequest(new Request.recognizeCard());
     }
 
 }

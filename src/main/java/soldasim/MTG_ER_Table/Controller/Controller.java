@@ -1,8 +1,11 @@
 package soldasim.MTG_ER_Table.Controller;
 
+import forohfor.scryfall.api.Card;
+import soldasim.MTG_ER_Table.CardRecognition.CardDownloader;
 import soldasim.MTG_ER_Table.CardRecognition.CardRecognizer;
 import soldasim.MTG_ER_Table.View.View;
 
+import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.concurrent.locks.Lock;
 
@@ -102,11 +105,12 @@ public class Controller {
     private void doWork(WorkData work) {
         doWorkDeckList(work);
         doWorkUpdateFW(work);
+        doWorkRecognizeCard(work);
     }
 
     /**
      * Check if there is a deck list ready, download cards if so.
-     * @param work an instance of Controller.WorkData
+     * @param work an instance of Controller.WorkData containing all requested work
      */
     private void doWorkDeckList(WorkData work) {
         if (work.deckList.equals("")) return;
@@ -116,7 +120,7 @@ public class Controller {
 
     /**
      * Check if the view has requested a change in updating the foreground window title, perform the change if so.
-     * @param work an instance of Controller.WorkData
+     * @param work an instance of Controller.WorkData containing all requested work
      */
     private void doWorkUpdateFW(WorkData work) {
         if (work.windowSelecting == Request.WindowSelecting.Selecting.NOTHING) return;
@@ -127,6 +131,19 @@ public class Controller {
         if (!ScreenCapture.isUpdatingFWTitle()) {
             ScreenCapture.startUpdatingFW(view);
         }
+    }
+
+    /**
+     * Check if card recognition has been requested and if a deck list has been loaded
+     * take a picture with the webcam and try to recognize the card if so.
+     * @param work an instance of Controller.WorkData containing all requested work
+     */
+    private void doWorkRecognizeCard(WorkData work) {
+        if (!work.recognizeCard) return;
+        if (cardRecognizer == null) return;
+        BufferedImage pic = WebcamController.getImage();
+        Card card = cardRecognizer.recognizeCard(pic);
+        view.displayCardImage(card.getImage());
     }
 
     /**

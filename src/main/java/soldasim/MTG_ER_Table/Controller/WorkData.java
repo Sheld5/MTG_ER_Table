@@ -18,7 +18,7 @@ public class WorkData {
     Boolean viewTerminated = false;
     String deckList = "";
     Request.WindowSelecting.Selecting windowSelecting = Request.WindowSelecting.Selecting.NOTHING;
-    boolean webcamImage = false;
+    boolean recognizeCard = false;
 
     public void giveRequest(Request.Interface req) {
         lock.lock();

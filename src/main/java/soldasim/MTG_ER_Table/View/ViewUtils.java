@@ -27,6 +27,7 @@ public class ViewUtils {
      * @return the rescaled image as a BufferedImage
      */
     public static BufferedImage scaleImage(BufferedImage image, int width, int height) {
+        if (image.getWidth() == width && image.getHeight() == height) return image;
         Image tmp = image.getScaledInstance(width, height, java.awt.Image.SCALE_SMOOTH);
         BufferedImage newImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
         Graphics2D g = newImage.createGraphics();
@@ -63,6 +64,20 @@ public class ViewUtils {
         if (heightRatio > 1 && widthRatio <= 1) return true;
         if (widthRatio > 1 && heightRatio <= 1) return false;
         return heightRatio < widthRatio;
+    }
+
+    /**
+     * Scale each dimension of the given images to the smaller of the two, so that both are the same size.
+     * @param imageA first image
+     * @param imageB second image
+     * @return an array containing both images scaled to the same dimensions in the same order as they have been given
+     */
+    public static BufferedImage[] makeImagesSameSize(BufferedImage imageA, BufferedImage imageB) {
+        int newWidth = Math.min(imageA.getWidth(), imageB.getWidth());
+        int newHeight = Math.min(imageA.getHeight(), imageB.getHeight());
+        BufferedImage scaledA = scaleImage(imageA, newWidth, newHeight);
+        BufferedImage scaledB = scaleImage(imageB, newWidth, newHeight);
+        return new BufferedImage[] {scaledA, scaledB};
     }
 
 }

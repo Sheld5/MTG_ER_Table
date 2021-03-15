@@ -47,10 +47,13 @@ public class Request {
         }
     }
 
-    public static class WebcamImage implements Interface {
+    /**
+     * Request the controller to take a picture with the webcam and try to recognize the card.
+     */
+    public static class recognizeCard implements Interface {
         @Override
         public void give(WorkData work) {
-            work.webcamImage = true;
+            work.recognizeCard = true;
         }
     }
 
