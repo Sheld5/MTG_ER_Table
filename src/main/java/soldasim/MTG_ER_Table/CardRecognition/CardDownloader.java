@@ -1,4 +1,4 @@
-package soldasim.MTG_ER_Table.Controller;
+package soldasim.MTG_ER_Table.CardRecognition;
 
 import forohfor.scryfall.api.*;
 
@@ -22,6 +22,7 @@ public class CardDownloader {
 
     /**
      * Create a list of card images from a list of cards.
+     * The returned card image list will be in the corresponding order to the given card list.
      * @param cards an ArrayList of cards as instances of Card
      * @return an ArrayList of card images as instances of BufferedImage
      * @see forohfor.scryfall.api.Card
