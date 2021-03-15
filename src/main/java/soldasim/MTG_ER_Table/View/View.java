@@ -29,8 +29,8 @@ public class View extends Application implements Runnable {
     private static final Insets PADDING = new Insets(12, 12, 12, 12);
     private static final int SPACING = 12;
 
-    private static final String UPDATE_FW_BUTTON_START_TEXT = "start selecting";
-    private static final String UPDATE_FW_BUTTON_STOP_TEXT = "stop selecting";
+    private static final String SELECT_WINDOW_BUTTON_START_TEXT = "start selecting";
+    private static final String SELECT_WINDOW_BUTTON_STOP_TEXT = "stop selecting";
 
     public static Controller controller;
 
@@ -38,8 +38,8 @@ public class View extends Application implements Runnable {
     private Scene testScene;
     private ImageView cardImageView;
     private Label foregroundWindowLabel;
-    private Button updateFWButton;
-    private boolean updatingFW = false;
+    private Button selectWindowButton;
+    private boolean selectingWindow = false;
 
     /**
      * Call Application.launch() to launch the view.
@@ -76,7 +76,7 @@ public class View extends Application implements Runnable {
         if (image == null) {
             Platform.runLater(() -> cardImageView.setImage(null));
         } else {
-            Image img = ViewUtils.getImage(ViewUtils.rescaleImage(image, 256, 256));
+            Image img = ViewUtils.getImage(ViewUtils.scaleImageToFit(image, 256, 256));
             Platform.runLater(() -> cardImageView.setImage(img));
         }
     }
@@ -118,10 +118,10 @@ public class View extends Application implements Runnable {
 
                     foregroundWindowLabel = new Label();
 
-                    updateFWButton = new Button(UPDATE_FW_BUTTON_START_TEXT);
-                    updateFWButton.setOnAction(event -> updateFWButtonPressed());
+                    selectWindowButton = new Button(SELECT_WINDOW_BUTTON_START_TEXT);
+                    selectWindowButton.setOnAction(event -> selectWindowButtonPressed());
 
-                VBox windowsArea = new VBox(foregroundWindowLabel, updateFWButton);
+                VBox windowsArea = new VBox(foregroundWindowLabel, selectWindowButton);
                 windowsArea.setAlignment(Pos.CENTER);
                 windowsArea.setSpacing(SPACING);
                 windowsArea.setPrefSize(128, 256);
@@ -138,15 +138,15 @@ public class View extends Application implements Runnable {
         controller.work.giveDeckList(deckList.getText());
     }
 
-    private void updateFWButtonPressed() {
-        if (updatingFW) {
-            updateFWButton.setText(UPDATE_FW_BUTTON_START_TEXT);
+    private void selectWindowButtonPressed() {
+        if (selectingWindow) {
+            selectWindowButton.setText(SELECT_WINDOW_BUTTON_START_TEXT);
             controller.work.requestUpdateFW(WorkData.Update.STOP);
-            updatingFW = false;
+            selectingWindow = false;
         } else {
-            updateFWButton.setText(UPDATE_FW_BUTTON_STOP_TEXT);
+            selectWindowButton.setText(SELECT_WINDOW_BUTTON_STOP_TEXT);
             controller.work.requestUpdateFW(WorkData.Update.START);
-            updatingFW = true;
+            selectingWindow = true;
         }
     }
 

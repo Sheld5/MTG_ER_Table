@@ -20,19 +20,49 @@ public class ViewUtils {
     }
 
     /**
-     * Rescale a BufferedImage.
-     * @param img instance of BufferedImage
+     * Rescale an image to given dimensions.
+     * @param image the image to be rescaled as a BufferedImage
      * @param width new width
      * @param height new height
-     * @return the given BufferedImage rescaled to a different size
+     * @return the rescaled image as a BufferedImage
      */
-    public static BufferedImage rescaleImage(BufferedImage img, int width, int height) {
-        Image tmp = img.getScaledInstance(width, height, java.awt.Image.SCALE_SMOOTH);
-        BufferedImage nimg = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
-        Graphics2D g = nimg.createGraphics();
+    public static BufferedImage scaleImage(BufferedImage image, int width, int height) {
+        Image tmp = image.getScaledInstance(width, height, java.awt.Image.SCALE_SMOOTH);
+        BufferedImage newImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D g = newImage.createGraphics();
         g.drawImage(tmp, 0, 0, null);
         g.dispose();
-        return nimg;
+        return newImage;
+    }
+
+    /**
+     * Rescale an image to fit given dimensions while maintaining the original aspect ratio.
+     * @param image the image to be rescaled as a BufferedImage
+     * @param width maximum width of the rescaled image
+     * @param height maximum height of the rescaled image
+     * @return the rescaled image as a BufferedImage
+     */
+    public static BufferedImage scaleImageToFit(BufferedImage image, int width, int height) {
+        int ogWidth = image.getWidth();
+        int ogHeight = image.getHeight();
+
+        if (ogHeight == height && ogWidth <= width) return image;
+        if (ogWidth == width && ogHeight <= height) return image;
+
+        double heightRatio = (double)height / ogHeight;
+        double widthRatio = (double)width / ogWidth;
+
+        if (fitByHeight(heightRatio, widthRatio)) {
+            return scaleImage(image, (int)(ogWidth * heightRatio), (int)(ogHeight * heightRatio));
+        } else {
+            return scaleImage(image, (int)(ogWidth * widthRatio), (int)(ogHeight * widthRatio));
+        }
+    }
+
+    private static boolean fitByHeight(double heightRatio, double widthRatio) {
+        if (heightRatio > 1 && widthRatio <= 1) return true;
+        if (widthRatio > 1 && heightRatio <= 1) return false;
+        return heightRatio < widthRatio;
     }
 
 }
