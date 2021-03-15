@@ -17,7 +17,8 @@ import java.util.List;
 public class ScreenCapture {
 
     private static final int MAX_TITLE_LENGTH = 512;
-    private static final int RUNNABLES_REFRESH_RATE = 60; // times per second
+    private static final int FW_UPDATER_REFRESH_RATE = 20; // times per second
+    private static final int WINDOW_CAPTURER_REFRESH_RATE = 60; // times per second
 
     private static ForegroundWindowUpdater fwUpdater;
     private static WindowCapturer windowCapturer;
@@ -175,7 +176,7 @@ public class ScreenCapture {
                     view.giveForegroundWindowTitle(fwTitle);
                 }
 
-                long waitTime = (long)(1000 / RUNNABLES_REFRESH_RATE) - (System.currentTimeMillis() - startTime);
+                long waitTime = (long)(1000 / FW_UPDATER_REFRESH_RATE) - (System.currentTimeMillis() - startTime);
                 if (waitTime > 0) {
                     try {
                         Thread.sleep(waitTime);
@@ -207,7 +208,7 @@ public class ScreenCapture {
 
                 if (fwHandle != null) view.displayImage(captureWindow(fwHandle));
 
-                long waitTime = (long)(1000 / RUNNABLES_REFRESH_RATE) - (System.currentTimeMillis() - startTime);
+                long waitTime = (long)(1000 / WINDOW_CAPTURER_REFRESH_RATE) - (System.currentTimeMillis() - startTime);
                 if (waitTime > 0) {
                     try {
                         Thread.sleep(waitTime);
