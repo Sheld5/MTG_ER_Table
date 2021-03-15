@@ -1,8 +1,8 @@
 package soldasim.MTG_ER_Table.Controller;
 
+import soldasim.MTG_ER_Table.CardRecognition.CardRecognizer;
 import soldasim.MTG_ER_Table.View.View;
 
-import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.concurrent.locks.Lock;
 
@@ -13,7 +13,7 @@ import java.util.concurrent.locks.Lock;
 public class Controller {
 
     private View view;
-    private final CardDownloader cardDownloader;
+    private CardRecognizer cardRecognizer;
 
     /**
      * This structure is used for storing data about work requested to be done by Controller by other application modules.
@@ -26,7 +26,6 @@ public class Controller {
      */
     public Controller() {
         work = new WorkData();
-        cardDownloader = new CardDownloader();
     }
 
     /**
@@ -34,6 +33,8 @@ public class Controller {
      */
     public void start() {
         waitForView();
+        WebcamController.init();
+        WebcamController.startStreamingWebcam(view);
         ScreenCapture.startCapturingWindow(view);
         workLoop();
         exit();
@@ -109,12 +110,8 @@ public class Controller {
      */
     private void doWorkDeckList(WorkData work) {
         if (work.deckList.equals("")) return;
-        ArrayList<String> cardNames = TextParser.parseDeckList(work.deckList);
-        cardDownloader.downloadCards(cardNames);
-
-        ArrayList<BufferedImage> cardImages = cardDownloader.getCardImages();
-        if (cardImages.isEmpty()) return;
-        view.displayImage(cardImages.get(0));
+        ArrayList<String> cardList = TextParser.parseDeckList(work.deckList);
+        cardRecognizer = new CardRecognizer(cardList);
     }
 
     /**
@@ -122,8 +119,8 @@ public class Controller {
      * @param work an instance of Controller.WorkData
      */
     private void doWorkUpdateFW(WorkData work) {
-        if (work.updateFW == WorkData.Update.NOTHING) return;
-        if (work.updateFW == WorkData.Update.STOP) {
+        if (work.windowSelecting == Request.WindowSelecting.Selecting.NOTHING) return;
+        if (work.windowSelecting == Request.WindowSelecting.Selecting.STOP) {
             ScreenCapture.stopUpdatingFW();
             return;
         }
@@ -136,6 +133,7 @@ public class Controller {
      * Actions performed before program ends.
      */
     private void exit() {
+        WebcamController.stopStreamingWebcam();
         ScreenCapture.stopUpdatingFW();
         ScreenCapture.stopCapturingWindow();
     }

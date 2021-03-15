@@ -1,7 +1,5 @@
 package soldasim.MTG_ER_Table.Controller;
 
-import soldasim.MTG_ER_Table.View.View;
-
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -19,55 +17,13 @@ public class WorkData {
 
     Boolean viewTerminated = false;
     String deckList = "";
-    Update updateFW = Update.NOTHING;
+    Request.WindowSelecting.Selecting windowSelecting = Request.WindowSelecting.Selecting.NOTHING;
+    boolean webcamImage = false;
 
-    public enum Update {
-        START,
-        STOP,
-        NOTHING
-    }
-
-    /**
-     * Called by the view on termination.
-     * @see View
-     */
-    public void notifyViewTerminated() {
+    public void giveRequest(Request.Interface req) {
         lock.lock();
         try {
-            viewTerminated = true;
-            ready = true;
-            cond.signal();
-        } finally {
-            lock.unlock();
-        }
-    }
-
-    /**
-     * Called by the view to give controller deck list from the user to be processed.
-     * @param deckList String containing individual cards on separate lines
-     *                 Can contain additional white-spaces and card quantities.
-     * @see View
-     */
-    public void giveDeckList(String deckList) {
-        lock.lock();
-        try {
-            this.deckList = deckList;
-            ready = true;
-            cond.signal();
-        } finally {
-            lock.unlock();
-        }
-    }
-
-    /**
-     * Called by the view to request the controller to start or stop updating the foreground window title.
-     * @param update value which determines whether the updating is to be started or stopped
-     * @see View
-     */
-    public void requestUpdateFW(Update update) {
-        lock.lock();
-        try {
-            this.updateFW = update;
+            req.give(this);
             ready = true;
             cond.signal();
         } finally {
