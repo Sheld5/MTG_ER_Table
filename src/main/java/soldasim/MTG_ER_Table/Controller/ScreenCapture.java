@@ -18,10 +18,10 @@ public class ScreenCapture {
 
     private static final int MAX_TITLE_LENGTH = 512;
     private static final int FW_UPDATER_REFRESH_RATE = 20; // times per second
-    private static final int WINDOW_CAPTURER_REFRESH_RATE = 60; // times per second
+    private static final int WINDOW_STREAMER_REFRESH_RATE = 60; // times per second
 
     private static ForegroundWindowUpdater fwUpdater;
-    private static WindowCapturer windowCapturer;
+    private static WindowStreamer windowStreamer;
     private static Robot robot;
 
     private static String fwTitle = "";
@@ -125,32 +125,32 @@ public class ScreenCapture {
     }
 
     /**
-     * Start a new thread that continuously makes the given view display the selected window.
+     * Start a new thread with WindowStreamer that continuously makes the given view display the selected window.
      * The window is selected by running the ForegroundWindowUpdater.
      * Only the thread created from the last call of this function will be running.
      * @param view a reference to the view which is to be continuously updated
      */
     static void startCapturingWindow(View view) {
-        if (windowCapturer != null) {
-            windowCapturer.run = false;
+        if (windowStreamer != null) {
+            windowStreamer.run = false;
         }
-        windowCapturer = new WindowCapturer(view);
-        Thread capturerThread = new Thread(windowCapturer);
-        capturerThread.start();
+        windowStreamer = new WindowStreamer(view);
+        Thread streamerThread = new Thread(windowStreamer);
+        streamerThread.start();
     }
 
     /**
-     * Stop the WindowCapturer.
+     * Stop the WindowStreamer.
      */
     static void stopCapturingWindow() {
-        if (windowCapturer == null) return;
-        windowCapturer.run = false;
-        windowCapturer = null;
+        if (windowStreamer == null) return;
+        windowStreamer.run = false;
+        windowStreamer = null;
     }
 
     /**
      * Runnable class which continuously updates the window stored in fwHandle and its title stored in fwTitle.
-     * Also continuously updates the FW title in the view accordingly.
+     * Also continuously updates the selected window title in the view accordingly.
      */
     private static class ForegroundWindowUpdater implements Runnable {
 
@@ -173,7 +173,7 @@ public class ScreenCapture {
                 if (!(newWindowTitle.equals(fwTitle) || newWindowTitle.equals(thisWindowTitle))) {
                     fwHandle = newWindow;
                     fwTitle = newWindowTitle;
-                    view.giveForegroundWindowTitle(fwTitle);
+                    view.giveSelectedWindowTitle(fwTitle);
                 }
 
                 long waitTime = (long)(1000 / FW_UPDATER_REFRESH_RATE) - (System.currentTimeMillis() - startTime);
@@ -191,12 +191,12 @@ public class ScreenCapture {
      * Runnable class which continuously takes screenshot of the window currently stored in fwHandle
      * and gives them to the view. The window stored in fwHandle is determined by the ForegroundWindowUpdater.
      */
-    private static class WindowCapturer implements Runnable {
+    private static class WindowStreamer implements Runnable {
 
         private final View view;
         private boolean run;
 
-        private WindowCapturer(View view) {
+        private WindowStreamer(View view) {
             this.view = view;
             run = true;
         }
@@ -206,9 +206,9 @@ public class ScreenCapture {
             while (run) {
                 long startTime = System.currentTimeMillis();
 
-                if (fwHandle != null) view.displayImage(captureWindow(fwHandle));
+                if (fwHandle != null) view.displayWindowCapture(captureWindow(fwHandle));
 
-                long waitTime = (long)(1000 / WINDOW_CAPTURER_REFRESH_RATE) - (System.currentTimeMillis() - startTime);
+                long waitTime = (long)(1000 / WINDOW_STREAMER_REFRESH_RATE) - (System.currentTimeMillis() - startTime);
                 if (waitTime > 0) {
                     try {
                         Thread.sleep(waitTime);
