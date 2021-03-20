@@ -33,6 +33,9 @@ public class View extends Application implements Runnable {
     private static final String SELECT_WINDOW_BUTTON_STOP_TEXT = "stop selecting";
 
     public static Controller controller;
+    private boolean selectingWindow = false;
+    private boolean updateCardImage = false;
+    private Image cardImage;
 
     private Stage mainStage;
     private Scene testScene;
@@ -40,7 +43,6 @@ public class View extends Application implements Runnable {
     private ImageView windowCaptureView;
     private Label selectedWindowLabel;
     private Button selectWindowButton;
-    private boolean selectingWindow = false;
 
     /**
      * Call Application.launch() to launch the view.
@@ -74,11 +76,20 @@ public class View extends Application implements Runnable {
     }
 
     public void displayCardImage(BufferedImage image) {
+        Image newCardImage;
         if (image == null) {
-            Platform.runLater(() -> cardImageView.setImage(null));
+            newCardImage = null;
         } else {
-            Image img = ViewUtils.getImage(ViewUtils.scaleImageToFit(image, 256, 256));
-            Platform.runLater(() -> cardImageView.setImage(img));
+            newCardImage = ViewUtils.getImage(ViewUtils.scaleImageToFit(image, 256, 256));
+        }
+
+        cardImage = newCardImage;
+        if (!updateCardImage) {
+            updateCardImage = true;
+            Platform.runLater(() -> {
+                updateCardImage = false;
+                cardImageView.setImage(cardImage);
+            });
         }
     }
 
