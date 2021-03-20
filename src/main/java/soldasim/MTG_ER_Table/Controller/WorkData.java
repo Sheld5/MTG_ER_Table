@@ -16,14 +16,13 @@ public class WorkData {
 
     Boolean viewTerminated = false;
     String deckList = "";
-    Request.WindowSelecting.Selecting windowSelecting = Request.WindowSelecting.Selecting.NOTHING;
-    boolean recognizeCard = false;
+    WorkRequest.WindowSelecting.Selecting windowSelecting = WorkRequest.WindowSelecting.Selecting.NOTHING;
 
     /**
      * Called by other modules to request work to be done by the controller.
      * @param req an instance of one of the request classes in Controller.Request
      */
-    public void giveRequest(Request.Interface req) {
+    public void giveRequest(WorkRequest.Interface req) {
         lock.lock();
         try {
             req.give(this);

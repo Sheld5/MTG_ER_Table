@@ -1,11 +1,8 @@
 package soldasim.MTG_ER_Table.Controller;
 
-import forohfor.scryfall.api.Card;
-import soldasim.MTG_ER_Table.CardRecognition.CardDownloader;
 import soldasim.MTG_ER_Table.CardRecognition.CardRecognizer;
 import soldasim.MTG_ER_Table.View.View;
 
-import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.concurrent.locks.Lock;
 
@@ -36,11 +33,17 @@ public class Controller {
      */
     public void start() {
         waitForView();
-        WebcamController.init();
-        WebcamController.startStreamingWebcam(view);
         ScreenCapture.startCapturingWindow(view);
         workLoop();
         exit();
+    }
+
+    /**
+     * Actions performed before program ends.
+     */
+    private void exit() {
+        ScreenCapture.stopUpdatingFW();
+        ScreenCapture.stopCapturingWindow();
     }
 
     /**
@@ -105,7 +108,6 @@ public class Controller {
     private void doWork(WorkData work) {
         doWorkDeckList(work);
         doWorkUpdateFW(work);
-        doWorkRecognizeCard(work);
     }
 
     /**
@@ -123,37 +125,14 @@ public class Controller {
      * @param work an instance of Controller.WorkData containing all requested work
      */
     private void doWorkUpdateFW(WorkData work) {
-        if (work.windowSelecting == Request.WindowSelecting.Selecting.NOTHING) return;
-        if (work.windowSelecting == Request.WindowSelecting.Selecting.STOP) {
+        if (work.windowSelecting == WorkRequest.WindowSelecting.Selecting.NOTHING) return;
+        if (work.windowSelecting == WorkRequest.WindowSelecting.Selecting.STOP) {
             ScreenCapture.stopUpdatingFW();
             return;
         }
         if (!ScreenCapture.isUpdatingFWTitle()) {
             ScreenCapture.startUpdatingFW(view);
         }
-    }
-
-    /**
-     * Check if card recognition has been requested and if a deck list has been loaded
-     * take a picture with the webcam and try to recognize the card if so.
-     * @param work an instance of Controller.WorkData containing all requested work
-     */
-    private void doWorkRecognizeCard(WorkData work) {
-        if (!work.recognizeCard) return;
-        if (cardRecognizer == null) return;
-        view.displayCardImage(null);
-        BufferedImage pic = WebcamController.getImage();
-        Card card = cardRecognizer.recognizeCard(pic);
-        view.displayCardImage(card.getImage());
-    }
-
-    /**
-     * Actions performed before program ends.
-     */
-    private void exit() {
-        WebcamController.stopStreamingWebcam();
-        ScreenCapture.stopUpdatingFW();
-        ScreenCapture.stopCapturingWindow();
     }
 
 }

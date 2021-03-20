@@ -3,7 +3,7 @@ package soldasim.MTG_ER_Table.Controller;
 /**
  * This class includes different work request that can be given to the controller.
  */
-public class Request {
+public class WorkRequest {
 
     /**
      * Each work request implements this interface.
@@ -50,16 +50,6 @@ public class Request {
         @Override
         public void give(WorkData work) {
             work.windowSelecting = selecting;
-        }
-    }
-
-    /**
-     * Request the controller to take a picture with the webcam and try to recognize the card.
-     */
-    public static class recognizeCard implements Interface {
-        @Override
-        public void give(WorkData work) {
-            work.recognizeCard = true;
         }
     }
 

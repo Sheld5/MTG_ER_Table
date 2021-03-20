@@ -15,7 +15,7 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import soldasim.MTG_ER_Table.Controller.Controller;
-import soldasim.MTG_ER_Table.Controller.Request;
+import soldasim.MTG_ER_Table.Controller.WorkRequest;
 
 import java.awt.image.BufferedImage;
 
@@ -36,7 +36,6 @@ public class View extends Application implements Runnable {
 
     private Stage mainStage;
     private Scene testScene;
-    private ImageView webcamView;
     private ImageView cardImageView;
     private ImageView windowCaptureView;
     private Label selectedWindowLabel;
@@ -71,16 +70,7 @@ public class View extends Application implements Runnable {
      */
     @Override
     public void stop() {
-        controller.work.giveRequest(new Request.ViewTerminated());
-    }
-
-    public void displayWebcamView(BufferedImage image) {
-        if (image == null) {
-            Platform.runLater(() -> webcamView.setImage(null));
-        } else {
-            Image img = ViewUtils.getImage(ViewUtils.scaleImageToFit(image, 256, 256));
-            Platform.runLater(() -> webcamView.setImage(img));
-        }
+        controller.work.giveRequest(new WorkRequest.ViewTerminated());
     }
 
     public void displayCardImage(BufferedImage image) {
@@ -121,16 +111,6 @@ public class View extends Application implements Runnable {
     }
 
     private void initTestScene() {
-                    webcamView = new ImageView();
-
-                    Button takePicButton = new Button("take picture");
-                    takePicButton.setOnAction(event -> takePicButtonPressed());
-
-                VBox webcamArea = new VBox(webcamView, takePicButton);
-                webcamArea.setAlignment(Pos.CENTER);
-                webcamArea.setSpacing(SPACING);
-                webcamArea.setPrefSize(256, 256);
-
                     cardImageView = new ImageView();
 
                 Pane cardImagePane = new Pane(cardImageView);
@@ -158,7 +138,7 @@ public class View extends Application implements Runnable {
                 windowsArea.setSpacing(SPACING);
                 windowsArea.setPrefSize(144, 256);
 
-            HBox content = new HBox(webcamArea, cardImagePane, deckArea, windowsArea);
+            HBox content = new HBox(cardImagePane, deckArea, windowsArea);
             content.setAlignment(Pos.CENTER);
             content.setSpacing(SPACING);
             content.setPadding(PADDING);
@@ -167,23 +147,19 @@ public class View extends Application implements Runnable {
     }
 
     private void loadButtonPressed(TextArea deckList) {
-        controller.work.giveRequest(new Request.DeckListUpdate(deckList.getText()));
+        controller.work.giveRequest(new WorkRequest.DeckListUpdate(deckList.getText()));
     }
 
     private void selectWindowButtonPressed() {
         if (selectingWindow) {
             selectWindowButton.setText(SELECT_WINDOW_BUTTON_START_TEXT);
-            controller.work.giveRequest(new Request.WindowSelecting(Request.WindowSelecting.Selecting.STOP));
+            controller.work.giveRequest(new WorkRequest.WindowSelecting(WorkRequest.WindowSelecting.Selecting.STOP));
             selectingWindow = false;
         } else {
             selectWindowButton.setText(SELECT_WINDOW_BUTTON_STOP_TEXT);
-            controller.work.giveRequest(new Request.WindowSelecting(Request.WindowSelecting.Selecting.START));
+            controller.work.giveRequest(new WorkRequest.WindowSelecting(WorkRequest.WindowSelecting.Selecting.START));
             selectingWindow = true;
         }
-    }
-
-    private void takePicButtonPressed() {
-        controller.work.giveRequest(new Request.recognizeCard());
     }
 
 }
