@@ -12,6 +12,7 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
@@ -170,7 +171,8 @@ public class View extends Application implements Runnable {
 
                 cardImageView = new ImageView();
 
-            Pane cardArea = new Pane(cardImageView);
+            StackPane cardArea = new StackPane(cardImageView);
+            cardArea.setAlignment(Pos.CENTER);
             cardArea.setPrefSize(CARD_VIEW_SIZE, CARD_VIEW_SIZE);
 
                 Button openSelectWindowStageButton = new Button(OPEN_SELECT_WINDOW_STAGE_BUTTON_TEXT);
