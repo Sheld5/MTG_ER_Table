@@ -14,16 +14,16 @@ public class WorkRequest {
     /**
      * Each work request implements this interface.
      */
-    public interface Interface {
-        void give(WorkData work);
+    public interface Request {
+        void receive(WorkData work);
     }
 
     /**
      * Notify the controller that the view has terminated.
      */
-    public static class ViewTerminated implements Interface {
+    public static class ViewTerminated implements Request {
         @Override
-        public void give(WorkData work) {
+        public void receive(WorkData work) {
             work.viewTerminated = true;
         }
     }
@@ -31,11 +31,11 @@ public class WorkRequest {
     /**
      * Give the controller new deck list.
      */
-    public static class DeckListUpdate implements Interface {
+    public static class DeckListUpdate implements Request {
         private final String deckList;
         public DeckListUpdate(String deckList) {this.deckList = deckList;}
         @Override
-        public void give(WorkData work) {
+        public void receive(WorkData work) {
             work.deckList = deckList;
         }
     }
@@ -43,13 +43,13 @@ public class WorkRequest {
     /**
      * Request the controller to start or stop updating which window is selected.
      */
-    public static class WindowSelecting implements Interface {
+    public static class WindowSelecting implements Request {
         private final Updating u;
         public WindowSelecting(Updating u) {
             this.u = u;
         }
         @Override
-        public void give(WorkData work) {
+        public void receive(WorkData work) {
             work.windowSelecting = u;
         }
     }
@@ -57,13 +57,13 @@ public class WorkRequest {
     /**
      * Request the controller to start or stop streaming the selected window to the view.
      */
-    public static class WindowStreaming implements Interface {
+    public static class WindowStreaming implements Request {
         private final Updating u;
         public WindowStreaming(Updating u) {
             this.u = u;
         }
         @Override
-        public void give(WorkData work) {
+        public void receive(WorkData work) {
             work.windowStreaming = u;
         }
     }

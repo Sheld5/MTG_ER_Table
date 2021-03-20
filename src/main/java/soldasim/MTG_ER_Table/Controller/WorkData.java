@@ -23,10 +23,10 @@ public class WorkData {
      * Called by other modules to request work to be done by the controller.
      * @param req an instance of one of the request classes in Controller.Request
      */
-    public void giveRequest(WorkRequest.Interface req) {
+    public void giveRequest(WorkRequest.Request req) {
         lock.lock();
         try {
-            req.give(this);
+            req.receive(this);
             ready = true;
             cond.signal();
         } finally {

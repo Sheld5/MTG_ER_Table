@@ -91,7 +91,7 @@ public class WebcamController {
             while (run) {
                 long startTime = System.currentTimeMillis();
 
-                // TODO: update webcam
+                // TODO: send webcam picture
 
                 long waitTime = (long)(1000 / WEBCAM_STREAMER_REFRESH_RATE) - (System.currentTimeMillis() - startTime);
                 if (waitTime > 0) {
