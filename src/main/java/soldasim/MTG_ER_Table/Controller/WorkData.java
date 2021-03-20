@@ -6,7 +6,6 @@ import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * Structure used to store data about work that has been requested by other modules of the application.
- * Other models of the application (running on other threads) use methods of this class to fill it with work data.
  * Controller uses this data later to perform the requested work.
  */
 public class WorkData {
@@ -20,6 +19,10 @@ public class WorkData {
     Request.WindowSelecting.Selecting windowSelecting = Request.WindowSelecting.Selecting.NOTHING;
     boolean recognizeCard = false;
 
+    /**
+     * Called by other modules to request work to be done by the controller.
+     * @param req an instance of one of the request classes in Controller.Request
+     */
     public void giveRequest(Request.Interface req) {
         lock.lock();
         try {

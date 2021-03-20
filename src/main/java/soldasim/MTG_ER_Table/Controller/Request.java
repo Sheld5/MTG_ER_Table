@@ -1,7 +1,13 @@
 package soldasim.MTG_ER_Table.Controller;
 
+/**
+ * This class includes different work request that can be given to the controller.
+ */
 public class Request {
 
+    /**
+     * Each work request implements this interface.
+     */
     public interface Interface {
         void give(WorkData work);
     }
