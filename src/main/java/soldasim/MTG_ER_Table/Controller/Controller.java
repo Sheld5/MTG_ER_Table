@@ -117,6 +117,8 @@ public class Controller {
      */
     private void doWorkDeckList(WorkData work) {
         if (work.deckList.equals("")) return;
+        // TODO for now only displays the first card in the view
+
         ArrayList<String> cardList = TextParser.parseDeckList(work.deckList);
         ArrayList<BufferedImage> cardImages = CardDownloader.getCardImages(CardDownloader.downloadCards(cardList));
         if (cardImages.size() == 0) {
@@ -147,11 +149,7 @@ public class Controller {
      */
     private void doWorkWindowStreaming(WorkData work) {
         if (work.windowStreaming == WorkRequest.Updating.NOTHING) return;
-        if (work.windowStreaming == WorkRequest.Updating.STOP) {
-            ScreenCapture.sendCapturesToView(false);
-        } else {
-            ScreenCapture.sendCapturesToView(true);
-        }
+        ScreenCapture.sendCapturesToView(work.windowStreaming == WorkRequest.Updating.START);
     }
 
 }

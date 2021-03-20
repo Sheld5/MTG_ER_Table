@@ -35,11 +35,12 @@ public class View extends Application implements Runnable {
     private static final int SPACING = 12;
     private static final int CARD_VIEW_SIZE = 256;
     private static final int WINDOW_VIEW_SIZE = 256;
-    private static final String OPEN_SELECT_WINDOW_STAGE_BUTTON_TEXT = "select window";
-    private static final String OPEN_LOAD_DECKLIST_STAGE_BUTTON_TEXT = "load decklist";
+    private static final String OPEN_SELECT_WINDOW_STAGE_BUTTON_TEXT = "Select Window";
+    private static final String OPEN_LOAD_DECKLIST_STAGE_BUTTON_TEXT = "Load Decklist";
     private static final String SELECT_WINDOW_BUTTON_START_TEXT = "start selecting";
     private static final String SELECT_WINDOW_BUTTON_STOP_TEXT = "stop selecting";
-    private static final String LOAD_DECKLIST_BUTTON_TEXT = "load";
+    private static final String SELECT_WINDOW_DONE_BUTTON_TEXT = "Done";
+    private static final String LOAD_DECKLIST_BUTTON_TEXT = "Load";
 
     public static Controller controller;
     private boolean selectingWindow = false;
@@ -89,6 +90,10 @@ public class View extends Application implements Runnable {
         return new ArrayList<>(Arrays.asList(MAIN_WINDOW_TITLE, SELECT_WINDOW_WINDOW_TITLE, LOAD_DECKLIST_WINDOW_TITLE));
     }
 
+    /**
+     * Display the given image in the card image view.
+     * @param image a BufferedImage containing a picture of a card
+     */
     public void displayCardImage(BufferedImage image) {
         Image newCardImage;
         if (image == null) {
@@ -99,10 +104,18 @@ public class View extends Application implements Runnable {
         Platform.runLater(() -> cardImageView.setImage(newCardImage));
     }
 
+    /**
+     * Update selected window label.
+     * @param foregroundWindowTitle a String containing the new window title
+     */
     public void giveSelectedWindowTitle(String foregroundWindowTitle) {
         Platform.runLater(() -> selectedWindowLabel.setText(foregroundWindowTitle));
     }
 
+    /**
+     * Display window capture in the window view.
+     * @param capture a BufferedImage containing a screenshot of an application window
+     */
     public void displayWindowCapture(BufferedImage capture) {
         Image newWindowImage;
         if (capture == null) {
@@ -157,10 +170,8 @@ public class View extends Application implements Runnable {
 
                 cardImageView = new ImageView();
 
-            VBox cardArea = new VBox(cardImageView);
-            cardArea.setAlignment(Pos.CENTER);
-            cardArea.setSpacing(SPACING);
-            cardArea.setPadding(PADDING);
+            Pane cardArea = new Pane(cardImageView);
+            cardArea.setPrefSize(CARD_VIEW_SIZE, CARD_VIEW_SIZE);
 
                 Button openSelectWindowStageButton = new Button(OPEN_SELECT_WINDOW_STAGE_BUTTON_TEXT);
                 openSelectWindowStageButton.setOnAction(event -> showSelectWindowStage());
@@ -188,12 +199,20 @@ public class View extends Application implements Runnable {
             Pane windowViewPane = new Pane(windowView);
             windowViewPane.setPrefSize(WINDOW_VIEW_SIZE, WINDOW_VIEW_SIZE);
 
+            selectedWindowLabel = new Label();
+
                 selectWindowButton = new Button(SELECT_WINDOW_BUTTON_START_TEXT);
                 selectWindowButton.setOnAction(event -> selectWindowButtonPressed());
 
-                selectedWindowLabel = new Label();
+                Button selectDoneButton = new Button(SELECT_WINDOW_DONE_BUTTON_TEXT);
+                selectDoneButton.setOnAction(event -> closeSelectWindowStage());
 
-        VBox content = new VBox(windowViewPane, selectedWindowLabel, selectWindowButton);
+            HBox controls = new HBox(selectWindowButton, selectDoneButton);
+            controls.setAlignment(Pos.CENTER);
+            controls.setSpacing(SPACING);
+            controls.setPadding(PADDING);
+
+        VBox content = new VBox(windowViewPane, selectedWindowLabel, controls);
         content.setAlignment(Pos.CENTER);
         content.setSpacing(SPACING);
         content.setPadding(PADDING);
@@ -226,6 +245,16 @@ public class View extends Application implements Runnable {
     }
 
     /**
+     * Close the window selection window.
+     * Request the controller to stop updating the selected window tile and streaming it to the view.
+     */
+    private void closeSelectWindowStage() {
+        selectWindowStage.close();
+        if (selectingWindow) selectWindowButtonPressed();
+        controller.work.giveRequest(new WorkRequest.WindowStreaming(WorkRequest.Updating.STOP));
+    }
+
+    /**
      * Show the decklist loading window.
      */
     private void showLoadDecklistStage() {
@@ -254,6 +283,7 @@ public class View extends Application implements Runnable {
      */
     private void loadDecklistButtonPressed(String decklist) {
         controller.work.giveRequest(new WorkRequest.DeckListUpdate(decklist));
+        loadDecklistStage.close();
     }
 
 }
