@@ -42,7 +42,7 @@ public class Controller {
      * Actions performed before program ends.
      */
     private void exit() {
-        ScreenCapture.stopUpdatingFW();
+        ScreenCapture.stopUpdatingWindowTitle();
         ScreenCapture.stopCapturingWindow();
     }
 
@@ -107,7 +107,8 @@ public class Controller {
      */
     private void doWork(WorkData work) {
         doWorkDeckList(work);
-        doWorkUpdateFW(work);
+        doWorkWindowSelecting(work);
+        doWorkWindowStreaming(work);
     }
 
     /**
@@ -126,17 +127,30 @@ public class Controller {
     }
 
     /**
-     * Check if the view has requested a change in updating the foreground window title, perform the change if so.
+     * Check if the view has requested a change in updating the selected window title, perform the change if so.
      * @param work an instance of Controller.WorkData containing all requested work
      */
-    private void doWorkUpdateFW(WorkData work) {
-        if (work.windowSelecting == WorkRequest.WindowSelecting.Selecting.NOTHING) return;
-        if (work.windowSelecting == WorkRequest.WindowSelecting.Selecting.STOP) {
-            ScreenCapture.stopUpdatingFW();
+    private void doWorkWindowSelecting(WorkData work) {
+        if (work.windowSelecting == WorkRequest.Updating.NOTHING) return;
+        if (work.windowSelecting == WorkRequest.Updating.STOP) {
+            ScreenCapture.stopUpdatingWindowTitle();
             return;
         }
-        if (!ScreenCapture.isUpdatingFWTitle()) {
-            ScreenCapture.startUpdatingFW(view);
+        if (!ScreenCapture.isUpdatingWindowTitle()) {
+            ScreenCapture.startUpdatingWindowTitle(view);
+        }
+    }
+
+    /**
+     * Check if the view has requested to start or stop streaming the selected window to it, perform the change if so.
+     * @param work an instance of Controller.WorkData containing all requested work
+     */
+    private void doWorkWindowStreaming(WorkData work) {
+        if (work.windowStreaming == WorkRequest.Updating.NOTHING) return;
+        if (work.windowStreaming == WorkRequest.Updating.STOP) {
+            ScreenCapture.sendCapturesToView(false);
+        } else {
+            ScreenCapture.sendCapturesToView(true);
         }
     }
 

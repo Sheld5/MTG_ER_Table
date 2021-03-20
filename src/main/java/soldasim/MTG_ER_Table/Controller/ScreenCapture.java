@@ -9,6 +9,7 @@ import soldasim.MTG_ER_Table.View.View;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -20,12 +21,13 @@ public class ScreenCapture {
     private static final int FW_UPDATER_REFRESH_RATE = 20; // times per second
     private static final int WINDOW_STREAMER_REFRESH_RATE = 60; // times per second
 
-    private static ForegroundWindowUpdater fwUpdater;
-    private static WindowStreamer windowStreamer;
+    private static SelectedWindowUpdater fwUpdater;
+    private static WindowCapturer windowCapturer;
     private static Robot robot;
 
     private static String fwTitle = "";
     private static WinDef.HWND fwHandle;
+    private static boolean sendCapturesToView = false;
 
     /**
      * Return a list of all active windows.
@@ -61,6 +63,7 @@ public class ScreenCapture {
      *         Can return null on error or if the given window does not have positive dimensions.
      */
     public static BufferedImage captureWindow(WinDef.HWND window) {
+        if (window == null) return null;
         if (robot == null) {
             try {
                 robot = new Robot();
@@ -77,100 +80,117 @@ public class ScreenCapture {
 
     /**
      * Return the title of the last application window that has been in the foreground
-     * while the ForegroundWindowUpdater was running excluding the window of this application.
+     * while the SelectedWindowUpdater was running excluding the window of this application.
      * @return String containing title of the last foreground application window
      */
-    static String getLastFWTitle() {
+    static String getLastWindowTitle() {
         return fwTitle;
     }
 
     /**
      * Return the WinDef.HWND handle of the last application window that has been in the foreground
-     * while the ForegroundWindowUpdater was running excluding the window of this application.
+     * while the SelectedWindowUpdater was running excluding the window of this application.
      * @return WinDef.HWND of the last foreground application window
      */
-    static WinDef.HWND getLastFWHandle() {
+    static WinDef.HWND getLastWindowHandle() {
         return fwHandle;
     }
 
     /**
-     * Start the ForegroundWindowUpdater on a new thread.
+     * Start the SelectedWindowUpdater on a new thread.
      * Only the thread created from the last call of this function will be running.
      * @param view a reference to the view which is to be continuously updated
      */
-    static void startUpdatingFW(View view) {
+    static void startUpdatingWindowTitle(View view) {
         if (fwUpdater != null) {
             fwUpdater.run = false;
         }
-        fwUpdater = new ForegroundWindowUpdater(view);
+        fwUpdater = new SelectedWindowUpdater(view);
         Thread updaterThread = new Thread(fwUpdater);
         updaterThread.start();
     }
 
     /**
-     * Stop the ForegroundWindowUpdater.
+     * Stop the SelectedWindowUpdater.
      */
-    static void stopUpdatingFW() {
+    static void stopUpdatingWindowTitle() {
         if (fwUpdater == null) return;
         fwUpdater.run = false;
         fwUpdater = null;
     }
 
     /**
-     * Returns whether there is a ForegroundWindowUpdater running.
+     * Returns whether there is a SelectedWindowUpdater running.
      * @return true if there is such thread running, false otherwise
      */
-    static boolean isUpdatingFWTitle() {
+    static boolean isUpdatingWindowTitle() {
         return fwUpdater != null;
     }
 
     /**
-     * Start a new thread with WindowStreamer that continuously makes the given view display the selected window.
-     * The window is selected by running the ForegroundWindowUpdater.
+     * Start a new thread with WindowCapturer that continuously captures the selected window.
+     * The window is selected by running the SelectedWindowUpdater.
      * Only the thread created from the last call of this function will be running.
      * @param view a reference to the view which is to be continuously updated
      */
     static void startCapturingWindow(View view) {
-        if (windowStreamer != null) {
-            windowStreamer.run = false;
+        if (windowCapturer != null) {
+            windowCapturer.run = false;
         }
-        windowStreamer = new WindowStreamer(view);
-        Thread streamerThread = new Thread(windowStreamer);
+        windowCapturer = new WindowCapturer(view);
+        Thread streamerThread = new Thread(windowCapturer);
         streamerThread.start();
     }
 
     /**
-     * Stop the WindowStreamer.
+     * Stop the WindowCapturer.
      */
     static void stopCapturingWindow() {
-        if (windowStreamer == null) return;
-        windowStreamer.run = false;
-        windowStreamer = null;
+        if (windowCapturer == null) return;
+        windowCapturer.run = false;
+        windowCapturer = null;
+    }
+
+    /**
+     * Returns whether there is a WindowCapturer running.
+     * @return true if there is such thread running, false otherwise
+     */
+    static boolean isCapturingWindow() {
+        return windowCapturer != null;
+    }
+
+    /**
+     * Set whether the WindowCapturer should send captured images to the view or to the controller.
+     * @param b if true the WindowCapturer will start sending captured images to the view,
+     *          otherwise it will start sending them to the controller
+     */
+    static void sendCapturesToView(boolean b) {
+        sendCapturesToView = b;
     }
 
     /**
      * Runnable class which continuously updates the window stored in fwHandle and its title stored in fwTitle.
      * Also continuously updates the selected window title in the view accordingly.
      */
-    private static class ForegroundWindowUpdater implements Runnable {
+    private static class SelectedWindowUpdater implements Runnable {
 
         private final View view;
         private boolean run;
 
-        private ForegroundWindowUpdater(View view) {
+        private SelectedWindowUpdater(View view) {
             this.view = view;
             run = true;
         }
 
         @Override
         public void run() {
-            String thisWindowTitle = View.getWindowTitle();
+            ArrayList<String> thisAppWindowTitles = View.getWindowTitles();
             while (run) {
                 long startTime = System.currentTimeMillis();
 
                 WinDef.HWND newWindow = getForegroundWindow();
                 String newWindowTitle = getWindowTitle(newWindow);
-                if (!(newWindowTitle.equals(fwTitle) || newWindowTitle.equals(thisWindowTitle))) {
+                if (!(newWindowTitle.equals(fwTitle) || thisAppWindowTitles.contains(newWindowTitle))) {
                     fwHandle = newWindow;
                     fwTitle = newWindowTitle;
                     view.giveSelectedWindowTitle(fwTitle);
@@ -189,14 +209,15 @@ public class ScreenCapture {
 
     /**
      * Runnable class which continuously takes screenshot of the window currently stored in fwHandle
-     * and gives them to the view. The window stored in fwHandle is determined by the ForegroundWindowUpdater.
+     * and either gives them to the view or to the controller depending on the state of the application.
+     * The window stored in fwHandle is determined by the SelectedWindowUpdater.
      */
-    private static class WindowStreamer implements Runnable {
+    private static class WindowCapturer implements Runnable {
 
         private final View view;
         private boolean run;
 
-        private WindowStreamer(View view) {
+        private WindowCapturer(View view) {
             this.view = view;
             run = true;
         }
@@ -206,7 +227,12 @@ public class ScreenCapture {
             while (run) {
                 long startTime = System.currentTimeMillis();
 
-                if (fwHandle != null) view.displayWindowCapture(captureWindow(fwHandle));
+                BufferedImage capture = captureWindow(fwHandle);
+                if (sendCapturesToView) {
+                    view.displayWindowCapture(capture);
+                } else {
+                    // TODO send captures to CardRecognition
+                }
 
                 long waitTime = (long)(1000 / WINDOW_STREAMER_REFRESH_RATE) - (System.currentTimeMillis() - startTime);
                 if (waitTime > 0) {

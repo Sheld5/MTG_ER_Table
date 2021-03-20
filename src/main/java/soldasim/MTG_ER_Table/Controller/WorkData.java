@@ -16,7 +16,8 @@ public class WorkData {
 
     Boolean viewTerminated = false;
     String deckList = "";
-    WorkRequest.WindowSelecting.Selecting windowSelecting = WorkRequest.WindowSelecting.Selecting.NOTHING;
+    WorkRequest.Updating windowSelecting = WorkRequest.Updating.NOTHING;
+    WorkRequest.Updating windowStreaming = WorkRequest.Updating.NOTHING;
 
     /**
      * Called by other modules to request work to be done by the controller.

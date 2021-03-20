@@ -13,11 +13,14 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
+import javafx.stage.Modality;
 import javafx.stage.Stage;
 import soldasim.MTG_ER_Table.Controller.Controller;
 import soldasim.MTG_ER_Table.Controller.WorkRequest;
 
 import java.awt.image.BufferedImage;
+import java.util.ArrayList;
+import java.util.Arrays;
 
 /**
  * View according to the MVC application model.
@@ -25,22 +28,29 @@ import java.awt.image.BufferedImage;
  */
 public class View extends Application implements Runnable {
 
-    private static final String WINDOW_TITLE = "MTG ER Table";
+    private static final String MAIN_WINDOW_TITLE = "MTG ER Table";
+    private static final String SELECT_WINDOW_WINDOW_TITLE = "Select Window to Capture";
+    private static final String LOAD_DECKLIST_WINDOW_TITLE = "Load Decklist";
     private static final Insets PADDING = new Insets(12, 12, 12, 12);
     private static final int SPACING = 12;
-
+    private static final int CARD_VIEW_SIZE = 256;
+    private static final int WINDOW_VIEW_SIZE = 256;
+    private static final String OPEN_SELECT_WINDOW_STAGE_BUTTON_TEXT = "select window";
+    private static final String OPEN_LOAD_DECKLIST_STAGE_BUTTON_TEXT = "load decklist";
     private static final String SELECT_WINDOW_BUTTON_START_TEXT = "start selecting";
     private static final String SELECT_WINDOW_BUTTON_STOP_TEXT = "stop selecting";
+    private static final String LOAD_DECKLIST_BUTTON_TEXT = "load";
 
     public static Controller controller;
     private boolean selectingWindow = false;
-    private boolean updateCardImage = false;
-    private Image cardImage;
+    private boolean updateWindowView = false;
+    private Image windowImage;
 
     private Stage mainStage;
-    private Scene testScene;
+    private Stage selectWindowStage;
+    private Stage loadDecklistStage;
+    private ImageView windowView;
     private ImageView cardImageView;
-    private ImageView windowCaptureView;
     private Label selectedWindowLabel;
     private Button selectWindowButton;
 
@@ -75,102 +85,175 @@ public class View extends Application implements Runnable {
         controller.work.giveRequest(new WorkRequest.ViewTerminated());
     }
 
+    public static ArrayList<String> getWindowTitles() {
+        return new ArrayList<>(Arrays.asList(MAIN_WINDOW_TITLE, SELECT_WINDOW_WINDOW_TITLE, LOAD_DECKLIST_WINDOW_TITLE));
+    }
+
     public void displayCardImage(BufferedImage image) {
         Image newCardImage;
         if (image == null) {
             newCardImage = null;
         } else {
-            newCardImage = ViewUtils.getImage(ViewUtils.scaleImageToFit(image, 256, 256));
+            newCardImage = ViewUtils.getImage(ViewUtils.scaleImageToFit(image, CARD_VIEW_SIZE, CARD_VIEW_SIZE));
         }
-
-        cardImage = newCardImage;
-        if (!updateCardImage) {
-            updateCardImage = true;
-            Platform.runLater(() -> {
-                updateCardImage = false;
-                cardImageView.setImage(cardImage);
-            });
-        }
-    }
-
-    public void displayWindowCapture(BufferedImage image) {
-        if (image == null) {
-            Platform.runLater(() -> windowCaptureView.setImage(null));
-        } else {
-            Image img = ViewUtils.getImage(ViewUtils.scaleImageToFit(image, 256, 144));
-            Platform.runLater(() -> windowCaptureView.setImage(img));
-        }
+        Platform.runLater(() -> cardImageView.setImage(newCardImage));
     }
 
     public void giveSelectedWindowTitle(String foregroundWindowTitle) {
         Platform.runLater(() -> selectedWindowLabel.setText(foregroundWindowTitle));
     }
 
-    public static String getWindowTitle() {
-        return WINDOW_TITLE;
+    public void displayWindowCapture(BufferedImage capture) {
+        Image newWindowImage;
+        if (capture == null) {
+            newWindowImage = null;
+        } else {
+            newWindowImage = ViewUtils.getImage(ViewUtils.scaleImageToFit(capture, WINDOW_VIEW_SIZE, WINDOW_VIEW_SIZE));
+        }
+
+        windowImage = newWindowImage;
+        if (!updateWindowView) {
+            updateWindowView = true;
+            Platform.runLater(() -> {
+                updateWindowView = false;
+                windowView.setImage(windowImage);
+            });
+        }
     }
 
+    /**
+     * Initialize the view.
+     */
     private void initialize() {
-        initTestScene();
-        initMainStage(testScene);
+        initSelectWindowStage(initSelectWindowScene());
+        initLoadDecklistStage(initLoadDecklistScene());
+        initMainStage(initMainScene());
     }
 
     private void initMainStage(Scene scene) {
-        mainStage.setTitle(WINDOW_TITLE);
+        mainStage.setTitle(MAIN_WINDOW_TITLE);
         mainStage.setResizable(false);
         mainStage.setScene(scene);
     }
 
-    private void initTestScene() {
-                    cardImageView = new ImageView();
-
-                Pane cardImagePane = new Pane(cardImageView);
-                cardImagePane.setPrefSize(256, 256);
-
-                    TextArea deckList = new TextArea();
-
-                    Button loadButton = new Button("load");
-                    loadButton.setOnAction(event -> loadButtonPressed(deckList));
-
-                VBox deckArea = new VBox(deckList, loadButton);
-                deckArea.setAlignment(Pos.CENTER);
-                deckArea.setSpacing(SPACING);
-                deckArea.setPrefSize(128, 256);
-
-                    windowCaptureView = new ImageView();
-
-                    selectedWindowLabel = new Label();
-
-                    selectWindowButton = new Button(SELECT_WINDOW_BUTTON_START_TEXT);
-                    selectWindowButton.setOnAction(event -> selectWindowButtonPressed());
-
-                VBox windowsArea = new VBox(windowCaptureView, selectedWindowLabel, selectWindowButton);
-                windowsArea.setAlignment(Pos.CENTER);
-                windowsArea.setSpacing(SPACING);
-                windowsArea.setPrefSize(144, 256);
-
-            HBox content = new HBox(cardImagePane, deckArea, windowsArea);
-            content.setAlignment(Pos.CENTER);
-            content.setSpacing(SPACING);
-            content.setPadding(PADDING);
-
-        testScene = new Scene(content);
+    private void initSelectWindowStage(Scene scene) {
+        selectWindowStage = new Stage();
+        selectWindowStage.setTitle(SELECT_WINDOW_WINDOW_TITLE);
+        selectWindowStage.initModality(Modality.APPLICATION_MODAL);
+        selectWindowStage.setResizable(false);
+        selectWindowStage.setScene(scene);
+        selectWindowStage.setOnCloseRequest(event -> controller.work.giveRequest(new WorkRequest.WindowStreaming(WorkRequest.Updating.STOP)));
     }
 
-    private void loadButtonPressed(TextArea deckList) {
-        controller.work.giveRequest(new WorkRequest.DeckListUpdate(deckList.getText()));
+    private void initLoadDecklistStage(Scene scene) {
+        loadDecklistStage = new Stage();
+        loadDecklistStage.setTitle(LOAD_DECKLIST_WINDOW_TITLE);
+        loadDecklistStage.initModality(Modality.APPLICATION_MODAL);
+        loadDecklistStage.setResizable(false);
+        loadDecklistStage.setScene(scene);
     }
 
+    private Scene initMainScene() {
+
+                cardImageView = new ImageView();
+
+            VBox cardArea = new VBox(cardImageView);
+            cardArea.setAlignment(Pos.CENTER);
+            cardArea.setSpacing(SPACING);
+            cardArea.setPadding(PADDING);
+
+                Button openSelectWindowStageButton = new Button(OPEN_SELECT_WINDOW_STAGE_BUTTON_TEXT);
+                openSelectWindowStageButton.setOnAction(event -> showSelectWindowStage());
+
+                Button openLoadDecklistStageButton = new Button(OPEN_LOAD_DECKLIST_STAGE_BUTTON_TEXT);
+                openLoadDecklistStageButton.setOnAction(event -> showLoadDecklistStage());
+
+            HBox controls = new HBox(openSelectWindowStageButton, openLoadDecklistStageButton);
+            controls.setAlignment(Pos.CENTER);
+            controls.setSpacing(SPACING);
+            controls.setPadding(PADDING);
+
+        VBox content = new VBox(cardArea, controls);
+        content.setAlignment(Pos.CENTER);
+        content.setSpacing(SPACING);
+        content.setPadding(PADDING);
+
+        return new Scene(content);
+    }
+
+    private Scene initSelectWindowScene() {
+
+                windowView = new ImageView();
+
+            Pane windowViewPane = new Pane(windowView);
+            windowViewPane.setPrefSize(WINDOW_VIEW_SIZE, WINDOW_VIEW_SIZE);
+
+                selectWindowButton = new Button(SELECT_WINDOW_BUTTON_START_TEXT);
+                selectWindowButton.setOnAction(event -> selectWindowButtonPressed());
+
+                selectedWindowLabel = new Label();
+
+        VBox content = new VBox(windowViewPane, selectedWindowLabel, selectWindowButton);
+        content.setAlignment(Pos.CENTER);
+        content.setSpacing(SPACING);
+        content.setPadding(PADDING);
+
+        return new Scene(content);
+    }
+
+    private Scene initLoadDecklistScene() {
+
+            TextArea decklistArea = new TextArea();
+
+            Button loadDecklistButton = new Button(LOAD_DECKLIST_BUTTON_TEXT);
+            loadDecklistButton.setOnAction(event -> loadDecklistButtonPressed(decklistArea.getText()));
+
+        VBox content = new VBox(decklistArea, loadDecklistButton);
+        content.setAlignment(Pos.CENTER);
+        content.setSpacing(SPACING);
+        content.setPadding(PADDING);
+
+        return new Scene(content);
+    }
+
+    /**
+     * Show the window selection window.
+     * Request the controller to start streaming the selected window to the view.
+     */
+    private void showSelectWindowStage() {
+        selectWindowStage.show();
+        controller.work.giveRequest(new WorkRequest.WindowStreaming(WorkRequest.Updating.START));
+    }
+
+    /**
+     * Show the decklist loading window.
+     */
+    private void showLoadDecklistStage() {
+        loadDecklistStage.show();
+    }
+
+    /**
+     * Request the controller to start or stop updating the selected window.
+     * Update the text of the window selection button accordingly.
+     */
     private void selectWindowButtonPressed() {
         if (selectingWindow) {
             selectWindowButton.setText(SELECT_WINDOW_BUTTON_START_TEXT);
-            controller.work.giveRequest(new WorkRequest.WindowSelecting(WorkRequest.WindowSelecting.Selecting.STOP));
+            controller.work.giveRequest(new WorkRequest.WindowSelecting(WorkRequest.Updating.STOP));
             selectingWindow = false;
         } else {
             selectWindowButton.setText(SELECT_WINDOW_BUTTON_STOP_TEXT);
-            controller.work.giveRequest(new WorkRequest.WindowSelecting(WorkRequest.WindowSelecting.Selecting.START));
+            controller.work.giveRequest(new WorkRequest.WindowSelecting(WorkRequest.Updating.START));
             selectingWindow = true;
         }
+    }
+
+    /**
+     * Request the controller to load a new decklist.
+     * @param decklist a String containing user input from the text area
+     */
+    private void loadDecklistButtonPressed(String decklist) {
+        controller.work.giveRequest(new WorkRequest.DeckListUpdate(decklist));
     }
 
 }

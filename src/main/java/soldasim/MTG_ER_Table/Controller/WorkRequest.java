@@ -5,6 +5,12 @@ package soldasim.MTG_ER_Table.Controller;
  */
 public class WorkRequest {
 
+    public enum Updating {
+        START,
+        STOP,
+        NOTHING
+    }
+
     /**
      * Each work request implements this interface.
      */
@@ -38,18 +44,27 @@ public class WorkRequest {
      * Request the controller to start or stop updating which window is selected.
      */
     public static class WindowSelecting implements Interface {
-        public enum Selecting {
-            START,
-            STOP,
-            NOTHING
-        }
-        private final Selecting selecting;
-        public WindowSelecting(Selecting selecting) {
-            this.selecting = selecting;
+        private final Updating u;
+        public WindowSelecting(Updating u) {
+            this.u = u;
         }
         @Override
         public void give(WorkData work) {
-            work.windowSelecting = selecting;
+            work.windowSelecting = u;
+        }
+    }
+
+    /**
+     * Request the controller to start or stop streaming the selected window to the view.
+     */
+    public static class WindowStreaming implements Interface {
+        private final Updating u;
+        public WindowStreaming(Updating u) {
+            this.u = u;
+        }
+        @Override
+        public void give(WorkData work) {
+            work.windowStreaming = u;
         }
     }
 
