@@ -10,7 +10,7 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 /**
- * Handles matching card images cut out from screenshots to cards from the deck list.
+ * Handles card recognition from images.
  */
 public class CardRecognizer implements Runnable {
 
@@ -20,7 +20,7 @@ public class CardRecognizer implements Runnable {
 
     private final Lock lock = new ReentrantLock();
     private final Condition cond = lock.newCondition();
-    private BufferedImage cardImage;
+    private BufferedImage capturedImage;
 
     /**
      * Use the CardDownloader class to download card data and get card images needed for card matching.
@@ -33,13 +33,13 @@ public class CardRecognizer implements Runnable {
     }
 
     /**
-     * Give the CardRecognizer an image of a card to be recognized.
+     * Give the CardRecognizer a captured image of the board to find and recognize cards from.
      * @param cardImage an image of a card cut from a captured image
      */
     public void giveImage(BufferedImage cardImage) {
         lock.lock();
         try {
-            this.cardImage = cardImage;
+            this.capturedImage = cardImage;
             cond.signal();
         } finally {
             lock.unlock();
@@ -60,27 +60,50 @@ public class CardRecognizer implements Runnable {
 
             lock.lock();
             try {
-                while (cardImage == null) {
+                while (capturedImage == null) {
                     try {
                         cond.await();
                     } catch (InterruptedException ignored) {}
                 }
-                tmp = cardImage;
-                cardImage = null;
+                tmp = capturedImage;
+                capturedImage = null;
             } finally {
                 lock.unlock();
             }
 
-            recognizeCard(tmp);
+            findAndRecognizeCards(tmp);
         }
+    }
+
+    /**
+     * Recognize cards in the given image and give them to the view to be displayed.
+     * @param capturedImage a captured image of the game board
+     */
+    private void findAndRecognizeCards(BufferedImage capturedImage) {
+        ArrayList<BufferedImage> cardImages = findCards(capturedImage);
+        for (BufferedImage cardImage : cardImages) {
+            Card card = recognizeCard(this.capturedImage);
+            // TODO: display the recognized card (and smt else?)
+        }
+    }
+
+    /**
+     * Get separate card images from the captured image of the game board.
+     * @param capturedImage a BufferedImage of the game board
+     * @return an ArrayList of BufferedImages of cards on the game board
+     */
+    private ArrayList<BufferedImage> findCards(BufferedImage capturedImage) {
+        // TODO
+        return null;
     }
 
     /**
      * Find the best match for the given card image among the cards in the deck list.
      * @param cardImage an image of a card to be recognized
      */
-    private void recognizeCard(BufferedImage cardImage) {
+    private Card recognizeCard(BufferedImage cardImage) {
         // TODO
+        return null;
     }
 
 
