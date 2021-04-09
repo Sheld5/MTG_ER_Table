@@ -5,14 +5,22 @@ import soldasim.MTG_ER_Table.View.ViewUtils;
 
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * Handles matching card images cut out from screenshots to cards from the deck list.
  */
-public class CardRecognizer {
+public class CardRecognizer implements Runnable {
 
     private ArrayList<Card> cardList;
     private ArrayList<BufferedImage> cardImages;
+    private boolean run = true;
+
+    private final Lock lock = new ReentrantLock();
+    private final Condition cond = lock.newCondition();
+    private BufferedImage cardImage;
 
     /**
      * Use the CardDownloader class to download card data and get card images needed for card matching.
@@ -25,19 +33,73 @@ public class CardRecognizer {
     }
 
     /**
+     * Give the CardRecognizer an image of a card to be recognized.
+     * @param cardImage an image of a card cut from a captured image
+     */
+    public void giveImage(BufferedImage cardImage) {
+        lock.lock();
+        try {
+            this.cardImage = cardImage;
+            cond.signal();
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    /**
+     * Stop the CardRecognizer update loop.
+     */
+    public void stop() {
+        run = false;
+    }
+
+    @Override
+    public void run() {
+        while (run) {
+            BufferedImage tmp;
+
+            lock.lock();
+            try {
+                while (cardImage == null) {
+                    try {
+                        cond.await();
+                    } catch (InterruptedException ignored) {}
+                }
+                tmp = cardImage;
+                cardImage = null;
+            } finally {
+                lock.unlock();
+            }
+
+            recognizeCard(tmp);
+        }
+    }
+
+    /**
+     * Find the best match for the given card image among the cards in the deck list.
+     * @param cardImage an image of a card to be recognized
+     */
+    private void recognizeCard(BufferedImage cardImage) {
+        // TODO
+    }
+
+
+    /* - - - - - UNUSED CODE BELOW - - - - - */
+
+    /**
      * Find the best match for the given card image among cards from the card list.
      * @param cardPhoto a photo of a card; should be a card from the card list
      * @return an instance of Card of the card best matching the given image
      * @see forohfor.scryfall.api.Card
      */
-    public Card recognizeCard(BufferedImage cardPhoto) {
+    public Card _recognizeCard(BufferedImage cardPhoto) {
         int listSize = cardList.size();
         Card bestCard = null;
         double bestMatch = -1;
         for (int i = 0; i < listSize; i++) {
             BufferedImage image = cardImages.get(i);
             if (image == null) continue;
-            double match = matchCard(cardPhoto, cardImages.get(i));
+            double match = _matchCard(cardPhoto, cardImages.get(i));
             if (match > bestMatch) {
                 bestCard = cardList.get(i);
                 bestMatch = match;
@@ -53,7 +115,7 @@ public class CardRecognizer {
      * @param cardImage an image of a card the unknown card is to be compared to
      * @return a value between 0 and 1 indicating how good of a match given images are
      */
-    private double matchCard(BufferedImage cardPhoto, BufferedImage cardImage) {
+    private double _matchCard(BufferedImage cardPhoto, BufferedImage cardImage) {
         BufferedImage[] scaledImages = ViewUtils.makeImagesSameSize(cardPhoto, cardImage);
         int width = scaledImages[0].getWidth();
         int height = scaledImages[0].getHeight();

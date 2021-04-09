@@ -1,6 +1,7 @@
 package soldasim.MTG_ER_Table.Controller;
 
 import soldasim.MTG_ER_Table.CardRecognition.CardDownloader;
+import soldasim.MTG_ER_Table.CardRecognition.CardRecognizer;
 import soldasim.MTG_ER_Table.View.View;
 
 import java.awt.image.BufferedImage;
@@ -14,6 +15,7 @@ import java.util.concurrent.locks.Lock;
 public class Controller {
 
     private View view;
+    private CardRecognizer cardRecognizer;
 
     /**
      * This structure is used for storing data about work requested to be done by Controller by other application modules.
@@ -112,20 +114,17 @@ public class Controller {
     }
 
     /**
-     * Check if there is a deck list ready, display the first card if so.
+     * Check if there is a deck list ready, initialize a new CardRecognizer with the new deck list
+     * and start it on a separate thread if so.
      * @param work an instance of Controller.WorkData containing all requested work
      */
     private void doWorkDeckList(WorkData work) {
         if (work.deckList.equals("")) return;
-        // TODO for now only displays the first card in the view
-
+        if (cardRecognizer != null) cardRecognizer.stop();
         ArrayList<String> cardList = TextParser.parseDeckList(work.deckList);
-        ArrayList<BufferedImage> cardImages = CardDownloader.getCardImages(CardDownloader.downloadCards(cardList));
-        if (cardImages.size() == 0) {
-            view.displayCardImage(null);
-        } else {
-            view.displayCardImage(cardImages.get(0));
-        }
+        cardRecognizer = new CardRecognizer(cardList);
+        Thread cardRecognizerThread = new Thread(cardRecognizer);
+        cardRecognizerThread.start();
     }
 
     /**
