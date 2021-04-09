@@ -1,10 +1,8 @@
 package soldasim.MTG_ER_Table.Controller;
 
-import soldasim.MTG_ER_Table.CardRecognition.CardDownloader;
 import soldasim.MTG_ER_Table.CardRecognition.CardRecognizer;
 import soldasim.MTG_ER_Table.View.View;
 
-import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.concurrent.locks.Lock;
 
@@ -120,11 +118,15 @@ public class Controller {
      */
     private void doWorkDeckList(WorkData work) {
         if (work.deckList.equals("")) return;
-        if (cardRecognizer != null) cardRecognizer.stop();
+        CardRecognizer oldCardRecognizer = cardRecognizer;
+        
         ArrayList<String> cardList = TextParser.parseDeckList(work.deckList);
         cardRecognizer = new CardRecognizer(cardList);
         Thread cardRecognizerThread = new Thread(cardRecognizer);
         cardRecognizerThread.start();
+
+        ScreenCapture.setCardRecognizer(cardRecognizer);
+        if (oldCardRecognizer != null) oldCardRecognizer.stop();
     }
 
     /**

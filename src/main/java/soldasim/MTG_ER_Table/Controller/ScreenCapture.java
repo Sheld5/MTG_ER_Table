@@ -5,6 +5,7 @@ import com.sun.jna.platform.DesktopWindow;
 import com.sun.jna.platform.WindowUtils;
 import com.sun.jna.platform.win32.User32;
 import com.sun.jna.platform.win32.WinDef;
+import soldasim.MTG_ER_Table.CardRecognition.CardRecognizer;
 import soldasim.MTG_ER_Table.View.View;
 
 import java.awt.*;
@@ -30,6 +31,7 @@ public class ScreenCapture {
     private static WinDef.HWND fwHandle;
     private static boolean sendCapturesToView = false;
     private static int windowCapturerRefreshRate = WINDOW_STREAMER_REFRESH_RATE_FOR_VIEW;
+    private static CardRecognizer cardRecognizer;
 
     /**
      * Return a list of all active windows.
@@ -127,6 +129,15 @@ public class ScreenCapture {
      */
     static boolean isUpdatingWindowTitle() {
         return fwUpdater != null;
+    }
+
+    /**
+     * Give ScreenCapture reference to a CardRecognizer which the WindowCapturer should send images to.
+     * @param cr an instance of CardRecognizer
+     * @see CardRecognizer
+     */
+    static void setCardRecognizer(CardRecognizer cr) {
+        cardRecognizer = cr;
     }
 
     /**
@@ -253,7 +264,7 @@ public class ScreenCapture {
                     view.displayWindowCapture(capture);
                 } else {
                     if (capture != null) {
-                        // TODO send captures to CardRecognition
+                        cardRecognizer.giveImage(capture);
                     }
                 }
 

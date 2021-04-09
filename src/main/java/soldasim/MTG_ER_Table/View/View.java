@@ -100,6 +100,7 @@ public class View extends Application implements Runnable {
      * @param image a BufferedImage containing a picture of a card
      */
     public void displayCardImage(BufferedImage image) {
+        // TODO: display more than one card
         Image newCardImage;
         if (image == null) {
             newCardImage = null;
