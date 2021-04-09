@@ -264,7 +264,7 @@ public class ScreenCapture {
                     view.displayWindowCapture(capture);
                 } else {
                     if (capture != null) {
-                        cardRecognizer.giveImage(capture);
+                        if (cardRecognizer != null) cardRecognizer.giveImage(capture);
                     }
                 }
 

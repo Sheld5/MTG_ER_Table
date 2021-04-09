@@ -118,15 +118,15 @@ public class Controller {
      */
     private void doWorkDeckList(WorkData work) {
         if (work.deckList.equals("")) return;
-        CardRecognizer oldCardRecognizer = cardRecognizer;
-        
+
+        ScreenCapture.setCardRecognizer(null);
+        if (cardRecognizer != null) cardRecognizer.stop();
+
         ArrayList<String> cardList = TextParser.parseDeckList(work.deckList);
         cardRecognizer = new CardRecognizer(cardList);
         Thread cardRecognizerThread = new Thread(cardRecognizer);
         cardRecognizerThread.start();
-
         ScreenCapture.setCardRecognizer(cardRecognizer);
-        if (oldCardRecognizer != null) oldCardRecognizer.stop();
     }
 
     /**
