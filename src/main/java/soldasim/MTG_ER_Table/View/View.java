@@ -87,6 +87,10 @@ public class View extends Application implements Runnable {
         controller.work.giveRequest(new WorkRequest.ViewTerminated());
     }
 
+    /**
+     * Returns a list of titles of all windows of this application.
+     * @return an ArrayList containing window titles
+     */
     public static ArrayList<String> getWindowTitles() {
         return new ArrayList<>(Arrays.asList(MAIN_WINDOW_TITLE, SELECT_WINDOW_WINDOW_TITLE, LOAD_DECKLIST_WINDOW_TITLE));
     }
