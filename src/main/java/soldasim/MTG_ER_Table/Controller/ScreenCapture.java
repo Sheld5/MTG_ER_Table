@@ -176,6 +176,12 @@ public class ScreenCapture {
 
         private final View view;
         private boolean run;
+        private ArrayList<String> thisAppWindowTitles;
+
+        private static final ArrayList<String> ignoredWindowTitles = new ArrayList<String>() {{
+            add("");
+            add("Task Switching");
+        }};
 
         private SelectedWindowUpdater(View view) {
             this.view = view;
@@ -184,13 +190,14 @@ public class ScreenCapture {
 
         @Override
         public void run() {
-            ArrayList<String> thisAppWindowTitles = View.getWindowTitles();
+            thisAppWindowTitles = View.getWindowTitles();
+
             while (run) {
                 long startTime = System.currentTimeMillis();
 
                 WinDef.HWND newWindow = getForegroundWindow();
                 String newWindowTitle = getWindowTitle(newWindow);
-                if (!(newWindowTitle.equals(fwTitle) || thisAppWindowTitles.contains(newWindowTitle))) {
+                if (windowIsAcceptable(newWindowTitle)) {
                     fwHandle = newWindow;
                     fwTitle = newWindowTitle;
                     view.giveSelectedWindowTitle(fwTitle);
@@ -203,6 +210,13 @@ public class ScreenCapture {
                     } catch (InterruptedException ignored) {}
                 }
             }
+        }
+
+        private boolean windowIsAcceptable(String newWindowTitle) {
+            if (newWindowTitle.equals(fwTitle)) return false;
+            if (thisAppWindowTitles.contains(newWindowTitle)) return false;
+            if (ignoredWindowTitles.contains(newWindowTitle)) return false;
+            return true;
         }
 
     }
