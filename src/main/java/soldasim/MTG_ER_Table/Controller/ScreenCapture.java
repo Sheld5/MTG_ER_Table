@@ -19,7 +19,8 @@ public class ScreenCapture {
 
     private static final int MAX_TITLE_LENGTH = 512;
     private static final int FW_UPDATER_REFRESH_RATE = 20; // times per second
-    private static final int WINDOW_STREAMER_REFRESH_RATE = 60; // times per second
+    private static final int WINDOW_STREAMER_REFRESH_RATE_FOR_VIEW = 60; // times per second
+    private static final int WINDOW_STREAMER_REFRESH_RATE_FOR_CARD_RECOGNITION = 20; // times per second
 
     private static SelectedWindowUpdater fwUpdater;
     private static WindowCapturer windowCapturer;
@@ -28,6 +29,7 @@ public class ScreenCapture {
     private static String fwTitle = "";
     private static WinDef.HWND fwHandle;
     private static boolean sendCapturesToView = false;
+    private static int windowCapturerRefreshRate = WINDOW_STREAMER_REFRESH_RATE_FOR_VIEW;
 
     /**
      * Return a list of all active windows.
@@ -166,6 +168,11 @@ public class ScreenCapture {
      */
     static void sendCapturesToView(boolean b) {
         sendCapturesToView = b;
+        if (b) {
+            windowCapturerRefreshRate = WINDOW_STREAMER_REFRESH_RATE_FOR_VIEW;
+        } else {
+            windowCapturerRefreshRate = WINDOW_STREAMER_REFRESH_RATE_FOR_CARD_RECOGNITION;
+        }
     }
 
     /**
@@ -250,7 +257,7 @@ public class ScreenCapture {
                     }
                 }
 
-                long waitTime = (long)(1000 / WINDOW_STREAMER_REFRESH_RATE) - (System.currentTimeMillis() - startTime);
+                long waitTime = (long)(1000 / windowCapturerRefreshRate) - (System.currentTimeMillis() - startTime);
                 if (waitTime > 0) {
                     try {
                         Thread.sleep(waitTime);
