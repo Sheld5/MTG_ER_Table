@@ -231,7 +231,9 @@ public class ScreenCapture {
                 if (sendCapturesToView) {
                     view.displayWindowCapture(capture);
                 } else {
-                    // TODO send captures to CardRecognition
+                    if (capture != null) {
+                        // TODO send captures to CardRecognition
+                    }
                 }
 
                 long waitTime = (long)(1000 / WINDOW_STREAMER_REFRESH_RATE) - (System.currentTimeMillis() - startTime);
