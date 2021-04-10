@@ -263,8 +263,8 @@ public class ScreenCapture {
                 if (sendCapturesToView) {
                     view.displayWindowCapture(capture);
                 } else {
-                    if (capture != null) {
-                        if (cardRecognizer != null) cardRecognizer.giveImage(capture);
+                    if (cardRecognizer != null && capture != null) {
+                        cardRecognizer.giveImage(capture);
                     }
                 }
 
