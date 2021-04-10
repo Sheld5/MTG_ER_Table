@@ -44,6 +44,8 @@ public class Controller {
     private void exit() {
         ScreenCapture.stopUpdatingWindowTitle();
         ScreenCapture.stopCapturingWindow();
+        if (cardRecognizer != null) cardRecognizer.stop();
+        cardRecognizer = null;
     }
 
     /**
@@ -123,7 +125,7 @@ public class Controller {
         if (cardRecognizer != null) cardRecognizer.stop();
 
         ArrayList<String> cardList = TextParser.parseDeckList(work.deckList);
-        cardRecognizer = new CardRecognizer(cardList);
+        cardRecognizer = new CardRecognizer(view, cardList);
         Thread cardRecognizerThread = new Thread(cardRecognizer);
         cardRecognizerThread.start();
         ScreenCapture.setCardRecognizer(cardRecognizer);
