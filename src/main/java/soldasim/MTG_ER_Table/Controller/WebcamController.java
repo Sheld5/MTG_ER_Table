@@ -8,6 +8,7 @@ import java.awt.image.BufferedImage;
 
 /**
  * Static class that handles the webcam.
+ * Currently unused.
  */
 public class WebcamController {
 
