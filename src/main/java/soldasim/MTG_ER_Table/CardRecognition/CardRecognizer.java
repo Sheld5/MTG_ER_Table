@@ -1,7 +1,10 @@
 package soldasim.MTG_ER_Table.CardRecognition;
 
 import forohfor.scryfall.api.Card;
-import soldasim.MTG_ER_Table.View.ViewUtils;
+import nu.pattern.OpenCV;
+import org.opencv.core.CvType;
+import org.opencv.core.Mat;
+import soldasim.MTG_ER_Table.View.View;
 
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
@@ -14,20 +17,26 @@ import java.util.concurrent.locks.ReentrantLock;
  */
 public class CardRecognizer implements Runnable {
 
-    private ArrayList<Card> cardList;
-    private ArrayList<BufferedImage> cardImages;
+    private final View view;
+    private final ArrayList<Card> cardList;
+    private final ArrayList<BufferedImage> cardImages;
     private boolean run = true;
 
     private final Lock lock = new ReentrantLock();
     private final Condition cond = lock.newCondition();
     private BufferedImage capturedImage;
 
+    static {
+        OpenCV.loadLocally();
+    }
+
     /**
      * Use the CardDownloader class to download card data and get card images needed for card matching.
      * @param cards cards that the CardRecognizer will try to match card images to
      * @see CardDownloader
      */
-    public CardRecognizer(ArrayList<String> cards) {
+    public CardRecognizer(View view, ArrayList<String> cards) {
+        this.view = view;
         cardList = CardDownloader.downloadCards(cards);
         cardImages = CardDownloader.getCardImages(cardList);
     }
@@ -89,11 +98,16 @@ public class CardRecognizer implements Runnable {
 
     /**
      * Get separate card images from the captured image of the game board.
-     * @param capturedImage a BufferedImage of the game board
+     * @param capturedImage a BufferedImage of type TYPE_INT_RGB containing the game board
      * @return an ArrayList of BufferedImages of cards on the game board
      */
     private ArrayList<BufferedImage> findCards(BufferedImage capturedImage) {
-        // TODO
+        if (capturedImage.getType() != BufferedImage.TYPE_INT_RGB) return null;
+        long start = System.currentTimeMillis();
+        Mat mat = bufferedImageToMat(capturedImage);
+        BufferedImage ccimg = matToBufferedImage(mat);
+        view.displayCardImage(ccimg);
+        System.out.printf("time: %d\n", System.currentTimeMillis() - start);
         return null;
     }
 
@@ -106,61 +120,49 @@ public class CardRecognizer implements Runnable {
         return null;
     }
 
-
-    /* - - - - - UNUSED CODE BELOW - - - - - */
-
     /**
-     * Find the best match for the given card image among cards from the card list.
-     * @param cardPhoto a photo of a card; should be a card from the card list
-     * @return an instance of Card of the card best matching the given image
-     * @see forohfor.scryfall.api.Card
+     * Create a Mat from given BufferedImage.
+     * @param image an instance of BufferedImage of type TYPE_INT_RGB
+     * @return an instance of Mat of type CV_8UC3,
+     *         returns null if the BufferedImage was of wrong type
      */
-    public Card _recognizeCard(BufferedImage cardPhoto) {
-        int listSize = cardList.size();
-        Card bestCard = null;
-        double bestMatch = -1;
-        for (int i = 0; i < listSize; i++) {
-            BufferedImage image = cardImages.get(i);
-            if (image == null) continue;
-            double match = _matchCard(cardPhoto, cardImages.get(i));
-            if (match > bestMatch) {
-                bestCard = cardList.get(i);
-                bestMatch = match;
-            }
+    private Mat bufferedImageToMat(BufferedImage image) {
+        if (image.getType() != BufferedImage.TYPE_INT_RGB) return null;
+        int width = image.getWidth();
+        int height = image.getHeight();
+        int[] pixels = image.getRGB(0 ,0, width, height, null, 0, width);
+        byte[] data = new byte[height * width * 3];
+        int di = 0;
+        for (int pixel : pixels) {
+            data[di++] = (byte) ((pixel >> 16) & 0xFF);
+            data[di++] = (byte) ((pixel >> 8) & 0xFF);
+            data[di++] = (byte) (pixel & 0xFF);
         }
-
-        return bestCard;
+        Mat mat = new Mat(height, width, CvType.CV_8UC3);
+        mat.put(0, 0, data);
+        return mat;
     }
 
     /**
-     * Compare the given card photo to the given card image and return value indicating how good match there is.
-     * @param cardPhoto an image of an unknown card
-     * @param cardImage an image of a card the unknown card is to be compared to
-     * @return a value between 0 and 1 indicating how good of a match given images are
+     * Create a BufferedImage from given Mat.
+     * @param mat an instance of Mat of type CV_8UC3
+     * @return an instance of BufferedImage of type TYPE_INT_RGB,
+     *         returns null if the mat was of wrong type
      */
-    private double _matchCard(BufferedImage cardPhoto, BufferedImage cardImage) {
-        BufferedImage[] scaledImages = ViewUtils.makeImagesSameSize(cardPhoto, cardImage);
-        int width = scaledImages[0].getWidth();
-        int height = scaledImages[0].getHeight();
-        int pixelCount = height * width;
-        int sampleCount = pixelCount * 4;
-
-        int[] photoPixels = new int[sampleCount];
-        int[] imagePixels = new int[sampleCount];
-        photoPixels = scaledImages[0].getRaster().getPixels(0,0, width, height, photoPixels);
-        imagePixels = scaledImages[1].getRaster().getPixels(0, 0, width, height, imagePixels);
-
-        int diff = 0;
-        for (int p = 0; p < pixelCount; p++) {
-            for (int s = 0; s < 3; s++) {
-                int index = p*4+s;
-                diff += Math.abs(photoPixels[index] - imagePixels[index]);
-            }
+    private BufferedImage matToBufferedImage(Mat mat) {
+        if (mat.type() != CvType.CV_8UC3) return null;
+        int width = mat.width();
+        int height = mat.height();
+        byte[] data = new byte[height * width * 3];
+        mat.get(0, 0, data);
+        int[] pixels = new int[height * width];
+        int di = 0;
+        for (int pi = 0; pi < pixels.length; pi++) {
+            pixels[pi] = ((data[di++] & 0xFF) << 16) | ((data[di++] & 0xFF) << 8) | (data[di++] & 0xFF);
         }
-        int maxDiff = pixelCount * 3 * 255;
-
-        double ret = 1 - (double)diff/maxDiff;
-        return ret;
+        BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+        image.getRaster().setDataElements(0, 0, width, height, pixels);
+        return image;
     }
 
 }
