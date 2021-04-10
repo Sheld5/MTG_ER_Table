@@ -54,7 +54,6 @@ public class View extends Application implements Runnable {
     private ImageView windowView;
     private ImageView cardImageView;
     private Label selectedWindowLabel;
-    private Button selectWindowButton;
 
     /**
      * Call Application.launch() to launch the view.
@@ -208,13 +207,10 @@ public class View extends Application implements Runnable {
 
             selectedWindowLabel = new Label();
 
-                selectWindowButton = new Button(SELECT_WINDOW_BUTTON_START_TEXT);
-                selectWindowButton.setOnAction(event -> selectWindowButtonPressed());
-
                 Button selectDoneButton = new Button(SELECT_WINDOW_DONE_BUTTON_TEXT);
                 selectDoneButton.setOnAction(event -> closeSelectWindowStage());
 
-            HBox controls = new HBox(selectWindowButton, selectDoneButton);
+            HBox controls = new HBox(selectDoneButton);
             controls.setAlignment(Pos.CENTER);
             controls.setSpacing(SPACING);
             controls.setPadding(PADDING);
@@ -244,10 +240,12 @@ public class View extends Application implements Runnable {
 
     /**
      * Show the window selection window.
-     * Request the controller to start streaming the selected window to the view.
+     * Request the controller to start updating the selected window and streaming it to the view.
      */
     private void showSelectWindowStage() {
         selectWindowStage.show();
+        selectingWindow = true;
+        controller.work.giveRequest(new WorkRequest.WindowSelecting(WorkRequest.Updating.START));
         controller.work.giveRequest(new WorkRequest.WindowStreaming(WorkRequest.Updating.START));
     }
 
@@ -257,7 +255,8 @@ public class View extends Application implements Runnable {
      */
     private void closeSelectWindowStage() {
         selectWindowStage.close();
-        if (selectingWindow) selectWindowButtonPressed();
+        selectingWindow = false;
+        controller.work.giveRequest(new WorkRequest.WindowSelecting(WorkRequest.Updating.STOP));
         controller.work.giveRequest(new WorkRequest.WindowStreaming(WorkRequest.Updating.STOP));
     }
 
@@ -266,22 +265,6 @@ public class View extends Application implements Runnable {
      */
     private void showLoadDecklistStage() {
         loadDecklistStage.show();
-    }
-
-    /**
-     * Request the controller to start or stop updating the selected window.
-     * Update the text of the window selection button accordingly.
-     */
-    private void selectWindowButtonPressed() {
-        if (selectingWindow) {
-            selectWindowButton.setText(SELECT_WINDOW_BUTTON_START_TEXT);
-            controller.work.giveRequest(new WorkRequest.WindowSelecting(WorkRequest.Updating.STOP));
-            selectingWindow = false;
-        } else {
-            selectWindowButton.setText(SELECT_WINDOW_BUTTON_STOP_TEXT);
-            controller.work.giveRequest(new WorkRequest.WindowSelecting(WorkRequest.Updating.START));
-            selectingWindow = true;
-        }
     }
 
     /**
