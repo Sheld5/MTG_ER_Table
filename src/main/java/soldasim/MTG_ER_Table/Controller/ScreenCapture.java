@@ -12,6 +12,8 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 
 /**
  * Gets information about other running applications and captures their windows.
@@ -20,17 +22,14 @@ public class ScreenCapture {
 
     private static final int MAX_TITLE_LENGTH = 512;
     private static final int FW_UPDATER_REFRESH_RATE = 20; // times per second
-    private static final int WINDOW_STREAMER_REFRESH_RATE_FOR_VIEW = 60; // times per second
-    private static final int WINDOW_STREAMER_REFRESH_RATE_FOR_CARD_RECOGNITION = 20; // times per second
+    private static final int WINDOW_STREAMER_REFRESH_RATE_FOR_VIEW = 58; // times per second
+    private static final int WINDOW_STREAMER_REFRESH_RATE_FOR_CARD_RECOGNITION = 2; // times per second
 
     private static SelectedWindowUpdater fwUpdater;
-    private static WindowCapturer windowCapturer;
     private static Robot robot;
 
     private static String fwTitle = "";
     private static WinDef.HWND fwHandle;
-    private static boolean sendCapturesToView = false;
-    private static int windowCapturerRefreshRate = WINDOW_STREAMER_REFRESH_RATE_FOR_VIEW;
     private static CardRecognizer cardRecognizer;
 
     /**
@@ -147,29 +146,30 @@ public class ScreenCapture {
      * @param view a reference to the view which is to be continuously updated
      */
     static void startCapturingWindow(View view) {
-        if (windowCapturer != null) {
-            windowCapturer.run = false;
-        }
-        windowCapturer = new WindowCapturer(view);
-        Thread streamerThread = new Thread(windowCapturer);
-        streamerThread.start();
+        WindowCapturer.run(view);
     }
 
     /**
      * Stop the WindowCapturer.
      */
     static void stopCapturingWindow() {
-        if (windowCapturer == null) return;
-        windowCapturer.run = false;
-        windowCapturer = null;
+        WindowCapturer.stop();
     }
 
     /**
-     * Returns whether there is a WindowCapturer running.
-     * @return true if there is such thread running, false otherwise
+     * Returns whether the WindowCapturer is running.
+     * @return true if the WindowCapturer is running, false otherwise
      */
     static boolean isCapturingWindow() {
-        return windowCapturer != null;
+        return WindowCapturer.running;
+    }
+
+    /**
+     * Returns whether the WindowCapturer is sending to the view.
+     * @return true if the WindowCapturer is sending to the view, false otherwise
+     */
+    static boolean isSendingToView() {
+        return WindowCapturer.sendCapturesToView;
     }
 
     /**
@@ -178,12 +178,7 @@ public class ScreenCapture {
      *          otherwise it will start sending them to the controller
      */
     static void sendCapturesToView(boolean b) {
-        sendCapturesToView = b;
-        if (b) {
-            windowCapturerRefreshRate = WINDOW_STREAMER_REFRESH_RATE_FOR_VIEW;
-        } else {
-            windowCapturerRefreshRate = WINDOW_STREAMER_REFRESH_RATE_FOR_CARD_RECOGNITION;
-        }
+        WindowCapturer.sendToView(b);
     }
 
     /**
@@ -240,25 +235,22 @@ public class ScreenCapture {
     }
 
     /**
-     * Runnable class which continuously takes screenshot of the window currently stored in fwHandle
+     * Continuously takes screenshot of the window currently stored in fwHandle
      * and either gives them to the view or to the controller depending on the state of the application.
      * The window stored in fwHandle is determined by the SelectedWindowUpdater.
      */
-    private static class WindowCapturer implements Runnable {
+    private static class WindowCapturer {
 
-        private final View view;
-        private boolean run;
+        private static View view;
+        private static Timer timer;
+        private static boolean running = false;
+        private static boolean sendCapturesToView;
+        private static int delay;
 
-        private WindowCapturer(View view) {
-            this.view = view;
-            run = true;
-        }
+        static {sendCapturesToView(false);}
 
-        @Override
-        public void run() {
-            while (run) {
-                long startTime = System.currentTimeMillis();
-
+        private static class CaptureTask extends java.util.TimerTask {
+            public void run() {
                 BufferedImage capture = captureWindow(fwHandle);
                 if (sendCapturesToView) {
                     view.displayWindowCapture(capture);
@@ -267,16 +259,38 @@ public class ScreenCapture {
                         cardRecognizer.giveImage(capture);
                     }
                 }
+            }
+        };
 
-                long waitTime = (long)(1000 / windowCapturerRefreshRate) - (System.currentTimeMillis() - startTime);
-                if (waitTime > 0) {
-                    try {
-                        Thread.sleep(waitTime);
-                    } catch (InterruptedException ignored) {}
-                }
+        private static void run(View view) {
+            WindowCapturer.view = view;
+            if (!running) {
+                running = true;
+                timer = new Timer();
+                timer.schedule(new CaptureTask(), 0, delay);
             }
         }
 
+        private static void stop() {
+            if (running) {
+                running = false;
+                timer.cancel();
+            }
+        }
+
+        private static void sendToView(boolean b) {
+            if (running) timer.cancel();
+            sendCapturesToView = b;
+            if (b) {
+                delay = 1000 / WINDOW_STREAMER_REFRESH_RATE_FOR_VIEW;
+            } else {
+                delay = 1000 / WINDOW_STREAMER_REFRESH_RATE_FOR_CARD_RECOGNITION;
+            }
+            if (running) {
+                timer = new Timer();
+                timer.schedule(new CaptureTask(), 0, delay);
+            }
+        }
     }
 
 }
