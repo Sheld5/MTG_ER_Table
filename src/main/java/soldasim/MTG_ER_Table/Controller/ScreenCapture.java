@@ -25,9 +25,7 @@ public class ScreenCapture {
     private static final int WINDOW_STREAMER_REFRESH_RATE_FOR_VIEW = 58; // times per second
     private static final int WINDOW_STREAMER_REFRESH_RATE_FOR_CARD_RECOGNITION = 2; // times per second
 
-    private static SelectedWindowUpdater fwUpdater;
     private static Robot robot;
-
     private static String fwTitle = "";
     private static WinDef.HWND fwHandle;
     private static CardRecognizer cardRecognizer;
@@ -100,26 +98,18 @@ public class ScreenCapture {
     }
 
     /**
-     * Start the SelectedWindowUpdater on a new thread.
-     * Only the thread created from the last call of this function will be running.
+     * Start SelectingWindowUpdater.
      * @param view a reference to the view which is to be continuously updated
      */
     static void startUpdatingWindowTitle(View view) {
-        if (fwUpdater != null) {
-            fwUpdater.run = false;
-        }
-        fwUpdater = new SelectedWindowUpdater(view);
-        Thread updaterThread = new Thread(fwUpdater);
-        updaterThread.start();
+        SelectedWindowUpdater.run(view);
     }
 
     /**
      * Stop the SelectedWindowUpdater.
      */
     static void stopUpdatingWindowTitle() {
-        if (fwUpdater == null) return;
-        fwUpdater.run = false;
-        fwUpdater = null;
+        SelectedWindowUpdater.stop();
     }
 
     /**
@@ -127,7 +117,7 @@ public class ScreenCapture {
      * @return true if there is such thread running, false otherwise
      */
     static boolean isUpdatingWindowTitle() {
-        return fwUpdater != null;
+        return SelectedWindowUpdater.running;
     }
 
     /**
@@ -157,6 +147,15 @@ public class ScreenCapture {
     }
 
     /**
+     * Set whether the WindowCapturer should send captured images to the view or to the controller.
+     * @param b if true the WindowCapturer will start sending captured images to the view,
+     *          otherwise it will start sending them to the controller
+     */
+    static void sendCapturesToView(boolean b) {
+        WindowCapturer.sendToView(b);
+    }
+
+    /**
      * Returns whether the WindowCapturer is running.
      * @return true if the WindowCapturer is running, false otherwise
      */
@@ -173,41 +172,25 @@ public class ScreenCapture {
     }
 
     /**
-     * Set whether the WindowCapturer should send captured images to the view or to the controller.
-     * @param b if true the WindowCapturer will start sending captured images to the view,
-     *          otherwise it will start sending them to the controller
-     */
-    static void sendCapturesToView(boolean b) {
-        WindowCapturer.sendToView(b);
-    }
-
-    /**
-     * Runnable class which continuously updates the window stored in fwHandle and its title stored in fwTitle.
+     * Continuously updates the window stored in fwHandle and its title stored in fwTitle.
      * Also continuously updates the selected window title in the view accordingly.
      */
-    private static class SelectedWindowUpdater implements Runnable {
+    private static class SelectedWindowUpdater {
 
-        private final View view;
-        private boolean run;
-        private ArrayList<String> thisAppWindowTitles;
+        private static View view;
+        private static boolean running;
+        private static Timer timer;
+        private static final int delay = 1000 / FW_UPDATER_REFRESH_RATE;
+        private static ArrayList<String> thisAppWindowTitles;
 
         private static final ArrayList<String> ignoredWindowTitles = new ArrayList<String>() {{
             add("");
             add("Task Switching");
         }};
 
-        private SelectedWindowUpdater(View view) {
-            this.view = view;
-            run = true;
-        }
-
-        @Override
-        public void run() {
-            thisAppWindowTitles = View.getWindowTitles();
-
-            while (run) {
-                long startTime = System.currentTimeMillis();
-
+        private static class WindowUpdateTask extends TimerTask {
+            @Override
+            public void run() {
                 WinDef.HWND newWindow = getForegroundWindow();
                 String newWindowTitle = getWindowTitle(newWindow);
                 if (windowIsAcceptable(newWindowTitle)) {
@@ -215,23 +198,32 @@ public class ScreenCapture {
                     fwTitle = newWindowTitle;
                     view.giveSelectedWindowTitle(fwTitle);
                 }
-
-                long waitTime = (long)(1000 / FW_UPDATER_REFRESH_RATE) - (System.currentTimeMillis() - startTime);
-                if (waitTime > 0) {
-                    try {
-                        Thread.sleep(waitTime);
-                    } catch (InterruptedException ignored) {}
-                }
             }
         }
 
-        private boolean windowIsAcceptable(String newWindowTitle) {
+        private static void run(View view) {
+            SelectedWindowUpdater.view = view;
+            thisAppWindowTitles = View.getWindowTitles();
+            if (!running) {
+                running = true;
+                timer = new Timer();
+                timer.schedule(new WindowUpdateTask(), 0, delay);
+            }
+        }
+
+        private static void stop() {
+            if (running) {
+                running = false;
+                timer.cancel();
+            }
+        }
+
+        private static boolean windowIsAcceptable(String newWindowTitle) {
             if (newWindowTitle.equals(fwTitle)) return false;
             if (thisAppWindowTitles.contains(newWindowTitle)) return false;
             if (ignoredWindowTitles.contains(newWindowTitle)) return false;
             return true;
         }
-
     }
 
     /**
@@ -242,14 +234,15 @@ public class ScreenCapture {
     private static class WindowCapturer {
 
         private static View view;
-        private static Timer timer;
         private static boolean running = false;
         private static boolean sendCapturesToView;
+        private static Timer timer;
         private static int delay;
 
         static {sendCapturesToView(false);}
 
         private static class CaptureTask extends java.util.TimerTask {
+            @Override
             public void run() {
                 BufferedImage capture = captureWindow(fwHandle);
                 if (sendCapturesToView) {
@@ -260,7 +253,7 @@ public class ScreenCapture {
                     }
                 }
             }
-        };
+        }
 
         private static void run(View view) {
             WindowCapturer.view = view;
