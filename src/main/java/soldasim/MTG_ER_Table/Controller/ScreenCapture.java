@@ -136,7 +136,8 @@ public class ScreenCapture {
      * @param view a reference to the view which is to be continuously updated
      */
     static void startCapturingWindow(View view) {
-        WindowCapturer.run(view);
+        WindowCapturer.setView(view);
+        WindowCapturer.run();
     }
 
     /**
@@ -237,9 +238,10 @@ public class ScreenCapture {
         private static boolean running = false;
         private static boolean sendCapturesToView;
         private static Timer timer;
-        private static int delay;
 
-        static {sendCapturesToView(false);}
+        static {
+            sendCapturesToView(false);
+        }
 
         private static class CaptureTask extends java.util.TimerTask {
             @Override
@@ -255,34 +257,36 @@ public class ScreenCapture {
             }
         }
 
-        private static void run(View view) {
+        private static void setView(View view) {
             WindowCapturer.view = view;
-            if (!running) {
-                running = true;
-                timer = new Timer();
-                timer.schedule(new CaptureTask(), 0, delay);
-            }
+        }
+
+        private static void run() {
+            if (running) return;
+            running = true;
+
+            int rate = sendCapturesToView
+                ? WINDOW_STREAMER_REFRESH_RATE_FOR_VIEW
+                : WINDOW_STREAMER_REFRESH_RATE_FOR_CARD_RECOGNITION;
+            int delay = 1000 / rate;
+            timer = new Timer();
+            timer.schedule(new CaptureTask(), 0, delay);
         }
 
         private static void stop() {
-            if (running) {
-                running = false;
-                timer.cancel();
-            }
+            if (!running) return;
+            running = false;
+
+            timer.cancel();
         }
 
         private static void sendToView(boolean b) {
-            if (running) timer.cancel();
+            if (sendCapturesToView == b) return;
+
+            boolean wasRunning = running;
+            if (wasRunning) stop();
             sendCapturesToView = b;
-            if (b) {
-                delay = 1000 / WINDOW_STREAMER_REFRESH_RATE_FOR_VIEW;
-            } else {
-                delay = 1000 / WINDOW_STREAMER_REFRESH_RATE_FOR_CARD_RECOGNITION;
-            }
-            if (running) {
-                timer = new Timer();
-                timer.schedule(new CaptureTask(), 0, delay);
-            }
+            if (wasRunning) run();
         }
     }
 
