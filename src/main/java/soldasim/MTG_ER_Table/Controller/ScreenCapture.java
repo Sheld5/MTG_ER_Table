@@ -209,6 +209,7 @@ public class ScreenCapture {
 
         private static void run() {
             if (running) return;
+
             running = true;
             timer = new Timer();
             int delay = 1000 / FW_UPDATER_REFRESH_RATE;
@@ -265,8 +266,8 @@ public class ScreenCapture {
 
         private static void run() {
             if (running) return;
-            running = true;
 
+            running = true;
             int rate = sendCapturesToView
                 ? WINDOW_STREAMER_REFRESH_RATE_FOR_VIEW
                 : WINDOW_STREAMER_REFRESH_RATE_FOR_CARD_RECOGNITION;
@@ -277,8 +278,8 @@ public class ScreenCapture {
 
         private static void stop() {
             if (!running) return;
-            running = false;
 
+            running = false;
             timer.cancel();
         }
 
