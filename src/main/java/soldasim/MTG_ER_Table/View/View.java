@@ -22,6 +22,7 @@ import soldasim.MTG_ER_Table.Controller.WorkRequest;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 /**
  * View according to the MVC application model.
@@ -38,8 +39,6 @@ public class View extends Application implements Runnable {
     private static final int WINDOW_VIEW_SIZE = 256;
     private static final String OPEN_SELECT_WINDOW_STAGE_BUTTON_TEXT = "Select Window";
     private static final String OPEN_LOAD_DECKLIST_STAGE_BUTTON_TEXT = "Load Decklist";
-    private static final String SELECT_WINDOW_BUTTON_START_TEXT = "start selecting";
-    private static final String SELECT_WINDOW_BUTTON_STOP_TEXT = "stop selecting";
     private static final String SELECT_WINDOW_DONE_BUTTON_TEXT = "Done";
     private static final String LOAD_DECKLIST_BUTTON_TEXT = "Load";
 
@@ -95,11 +94,12 @@ public class View extends Application implements Runnable {
     }
 
     /**
-     * Display the given image in the card image view.
-     * @param image a BufferedImage containing a picture of a card
+     * Display given images in the card image view.
+     * @param cardImages a List of BufferedImages
      */
-    public void displayCardImage(BufferedImage image) {
+    public void displayCardImage(List<BufferedImage> cardImages) {
         // TODO: display more than one card
+        BufferedImage image = cardImages.get(0);
         Image newCardImage;
         if (image == null) {
             newCardImage = null;

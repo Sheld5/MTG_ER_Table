@@ -8,14 +8,18 @@ import soldasim.MTG_ER_Table.View.View;
 
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.stream.IntStream;
 
 /**
  * Handles card recognition from images.
  */
 public class CardRecognizer implements Runnable {
+
+    private static final int BATCH_SIZE = 100000; //pixels
 
     private final View view;
     private final ArrayList<Card> cardList;
@@ -85,38 +89,41 @@ public class CardRecognizer implements Runnable {
     }
 
     /**
-     * Recognize cards in the given image and give them to the view to be displayed.
-     * @param capturedImage a captured image of the game board
+     * Recognize cards in the given image.
+     * @param capturedImage a captured image of the game board; has to be BufferedImage of type TYPE_INT_RGB
+     * @return a List of recognized cards
      */
-    private void findAndRecognizeCards(BufferedImage capturedImage) {
-        ArrayList<BufferedImage> cardImages = findCards(capturedImage);
-        for (BufferedImage cardImage : cardImages) {
-            Card card = recognizeCard(this.capturedImage);
-            // TODO: display the recognized card (and smt else?)
-        }
+    private List<Card> findAndRecognizeCards(BufferedImage capturedImage) {
+        if (capturedImage.getType() != BufferedImage.TYPE_INT_RGB) return null;
+
+        Mat gameBoard = bufferedImageToMat(capturedImage);
+        List<Mat> cardImages = findCards(gameBoard);
+        List<Card> cards = recognizeCards(cardImages);
+
+        return cards;
     }
 
     /**
      * Get separate card images from the captured image of the game board.
-     * @param capturedImage a BufferedImage of type TYPE_INT_RGB containing the game board
-     * @return an ArrayList of BufferedImages of cards on the game board
+     * @param capturedImage a Mat of type CV_8UC3 containing the game board
+     * @return a List of Mat of type CV_8UC3 of cards on the game board
      */
-    private ArrayList<BufferedImage> findCards(BufferedImage capturedImage) {
-        if (capturedImage.getType() != BufferedImage.TYPE_INT_RGB) return null;
-        long start = System.currentTimeMillis();
-        Mat mat = bufferedImageToMat(capturedImage);
-        BufferedImage ccimg = matToBufferedImage(mat);
-        view.displayCardImage(ccimg);
-        System.out.printf("time: %d\n", System.currentTimeMillis() - start);
+    private List<Mat> findCards(Mat capturedImage) {
+
+        // TODO
+
         return null;
     }
 
     /**
-     * Find the best match for the given card image among the cards in the deck list.
-     * @param cardImage an image of a card to be recognized
+     * Find the best match for each of the given card images among the cards in the deck list.
+     * @param cardImages a List of Mat of type CV_8UC3 of cards to be recognized
+     * @return a List of recognized cards
      */
-    private Card recognizeCard(BufferedImage cardImage) {
+    private List<Card> recognizeCards(List<Mat> cardImages) {
+
         // TODO
+
         return null;
     }
 
@@ -128,16 +135,20 @@ public class CardRecognizer implements Runnable {
      */
     private Mat bufferedImageToMat(BufferedImage image) {
         if (image.getType() != BufferedImage.TYPE_INT_RGB) return null;
+
         int width = image.getWidth();
         int height = image.getHeight();
+
         int[] pixels = image.getRGB(0 ,0, width, height, null, 0, width);
         byte[] data = new byte[height * width * 3];
+
         int di = 0;
         for (int pixel : pixels) {
             data[di++] = (byte) ((pixel >> 16) & 0xFF);
             data[di++] = (byte) ((pixel >> 8) & 0xFF);
             data[di++] = (byte) (pixel & 0xFF);
         }
+
         Mat mat = new Mat(height, width, CvType.CV_8UC3);
         mat.put(0, 0, data);
         return mat;
@@ -151,15 +162,19 @@ public class CardRecognizer implements Runnable {
      */
     private BufferedImage matToBufferedImage(Mat mat) {
         if (mat.type() != CvType.CV_8UC3) return null;
+
         int width = mat.width();
         int height = mat.height();
+
         byte[] data = new byte[height * width * 3];
         mat.get(0, 0, data);
         int[] pixels = new int[height * width];
+
         int di = 0;
         for (int pi = 0; pi < pixels.length; pi++) {
             pixels[pi] = ((data[di++] & 0xFF) << 16) | ((data[di++] & 0xFF) << 8) | (data[di++] & 0xFF);
         }
+
         BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
         image.getRaster().setDataElements(0, 0, width, height, pixels);
         return image;
