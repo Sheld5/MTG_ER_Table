@@ -102,7 +102,8 @@ public class ScreenCapture {
      * @param view a reference to the view which is to be continuously updated
      */
     static void startUpdatingWindowTitle(View view) {
-        SelectedWindowUpdater.run(view);
+        SelectedWindowUpdater.setView(view);
+        SelectedWindowUpdater.run();
     }
 
     /**
@@ -181,7 +182,6 @@ public class ScreenCapture {
         private static View view;
         private static boolean running;
         private static Timer timer;
-        private static final int delay = 1000 / FW_UPDATER_REFRESH_RATE;
         private static ArrayList<String> thisAppWindowTitles;
 
         private static final ArrayList<String> ignoredWindowTitles = new ArrayList<String>() {{
@@ -202,21 +202,23 @@ public class ScreenCapture {
             }
         }
 
-        private static void run(View view) {
+        private static void setView(View view) {
             SelectedWindowUpdater.view = view;
             thisAppWindowTitles = View.getWindowTitles();
-            if (!running) {
-                running = true;
-                timer = new Timer();
-                timer.schedule(new WindowUpdateTask(), 0, delay);
-            }
+        }
+
+        private static void run() {
+            if (running) return;
+            running = true;
+            timer = new Timer();
+            int delay = 1000 / FW_UPDATER_REFRESH_RATE;
+            timer.schedule(new WindowUpdateTask(), 0, delay);
         }
 
         private static void stop() {
-            if (running) {
-                running = false;
-                timer.cancel();
-            }
+            if (!running) return;
+            running = false;
+            timer.cancel();
         }
 
         private static boolean windowIsAcceptable(String newWindowTitle) {
